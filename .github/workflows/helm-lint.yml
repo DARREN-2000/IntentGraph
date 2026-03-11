@@ -10,6 +10,9 @@ on:
     paths:
       - 'infra/helm/**'
 
+permissions:
+  contents: read
+
 jobs:
   helm-lint:
     name: Helm Lint
