@@ -1,0 +1,19 @@
+{
+  "name": "@intentgraph/approvals-service",
+  "version": "0.1.0",
+  "description": "IntentGraph approval engine",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@intentgraph/workflow-spec": "0.1.0",
+    "@intentgraph/policy": "0.1.0",
+    "@intentgraph/shared": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

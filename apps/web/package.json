@@ -1,0 +1,12 @@
+{
+  "name": "@intentgraph/web",
+  "version": "0.1.0",
+  "description": "IntentGraph web dashboard",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "echo 'Web build placeholder — Next.js app coming soon'",
+    "dev": "echo 'Web dev placeholder'",
+    "clean": "rm -rf .next out"
+  }
+}

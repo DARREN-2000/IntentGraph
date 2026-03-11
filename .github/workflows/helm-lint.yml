@@ -1,0 +1,35 @@
+name: Helm Lint & Template
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/helm/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infra/helm/**'
+
+jobs:
+  helm-lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Lint chart
+        run: helm lint infra/helm/intentgraph
+
+      - name: Template chart
+        run: helm template intentgraph infra/helm/intentgraph
+
+      - name: Template with custom values
+        run: |
+          helm template intentgraph infra/helm/intentgraph \
+            --set replicaCount=3 \
+            --set ingress.enabled=true \
+            --set autoscaling.enabled=true

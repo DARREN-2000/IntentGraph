@@ -1,0 +1,23 @@
+{
+  "name": "@intentgraph/api",
+  "version": "0.1.0",
+  "description": "IntentGraph API control plane service",
+  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@intentgraph/workflow-spec": "0.1.0",
+    "@intentgraph/action-sdk": "0.1.0",
+    "@intentgraph/policy": "0.1.0",
+    "@intentgraph/shared": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

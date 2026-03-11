@@ -1,0 +1,134 @@
+# IntentGraph Helm Values
+# Override these for your environment
+
+replicaCount: 2
+
+image:
+  repository: intentgraph/api
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+worker:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: intentgraph/worker
+    pullPolicy: IfNotPresent
+    tag: "0.1.0"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 3001
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: intentgraph.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# ─── Database ───────────────────────────────────
+postgresql:
+  enabled: true
+  auth:
+    database: intentgraph
+    username: intentgraph
+    existingSecret: ""
+  primary:
+    persistence:
+      size: 10Gi
+
+# ─── Cache ──────────────────────────────────────
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+
+# ─── Message Queue ──────────────────────────────
+nats:
+  enabled: true
+  jetstream:
+    enabled: true
+
+# ─── Temporal ───────────────────────────────────
+temporal:
+  enabled: true
+  server:
+    replicaCount: 1
+
+# ─── Environment ────────────────────────────────
+env:
+  NODE_ENV: production
+  LOG_LEVEL: info
+
+# ─── Monitoring ─────────────────────────────────
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+
+# ─── Network Policies ──────────────────────────
+networkPolicy:
+  enabled: true
+
+# ─── Pod Disruption Budget ──────────────────────
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
