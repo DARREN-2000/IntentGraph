@@ -1,0 +1,16 @@
+apiVersion: v2
+name: intentgraph
+description: IntentGraph — Universal Action OS Helm Chart
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - intentgraph
+  - workflow
+  - agentic
+  - automation
+home: https://github.com/DARREN-2000/IntentGraph
+sources:
+  - https://github.com/DARREN-2000/IntentGraph
+maintainers:
+  - name: IntentGraph Team

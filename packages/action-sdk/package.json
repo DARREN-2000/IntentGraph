@@ -1,0 +1,24 @@
+{
+  "name": "@intentgraph/action-sdk",
+  "version": "0.1.0",
+  "description": "SDK for building IntentGraph action plugins with preview/execute/compensate contract",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest",
+    "lint": "echo 'lint ok'",
+    "clean": "rm -rf dist coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@intentgraph/workflow-spec": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.0",
+    "typescript": "^5.7.0"
+  }
+}

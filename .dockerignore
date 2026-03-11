@@ -1,0 +1,17 @@
+# Patterns to ignore in Docker builds
+node_modules
+dist
+build
+coverage
+.turbo
+.git
+.env
+.env.*
+*.md
+!README.md
+__tests__
+*.test.ts
+*.spec.ts
+.github
+infra
+docs

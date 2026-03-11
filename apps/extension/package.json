@@ -1,0 +1,10 @@
+{
+  "name": "@intentgraph/extension",
+  "version": "0.1.0",
+  "description": "IntentGraph browser extension — act on this page",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "echo 'Extension build placeholder'"
+  }
+}

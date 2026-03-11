@@ -1,0 +1,19 @@
+{
+  "name": "@intentgraph/connectors",
+  "version": "0.1.0",
+  "description": "IntentGraph connector plugins for external services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@intentgraph/workflow-spec": "0.1.0",
+    "@intentgraph/action-sdk": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

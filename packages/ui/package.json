@@ -1,0 +1,10 @@
+{
+  "name": "@intentgraph/ui",
+  "version": "0.1.0",
+  "description": "Shared UI components for IntentGraph",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "echo 'UI build placeholder'"
+  }
+}

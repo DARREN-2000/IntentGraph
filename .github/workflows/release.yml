@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: |
+          npx tsc -p packages/workflow-spec/tsconfig.build.json
+          npx tsc -p packages/action-sdk/tsconfig.build.json
+          npx tsc -p packages/policy/tsconfig.build.json
+          npx tsc -p packages/shared/tsconfig.build.json
+
+      - name: Run tests
+        run: |
+          cd packages/workflow-spec && npx jest --ci
+          cd ../action-sdk && npx jest --ci
+          cd ../policy && npx jest --ci
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
