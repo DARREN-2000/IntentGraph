@@ -66,6 +66,8 @@ IntentGraph turns natural-language goals into **trusted, reusable workflows**. A
 - **5 Terraform modules** for AWS deployment (VPC, EKS, RDS, Redis, S3)
 - **1 Helm chart** with HPA, PDB, network policies, and security contexts
 
+![IntentGraph Test Suite — 58 tests passing across 5 suites](docs/screenshots/test-suite.png)
+
 ## Quick Start
 
 ```bash
@@ -105,6 +107,8 @@ cd packages/connectors && npx jest --verbose --testPathPattern e2e
 - ✅ Compensation/rollback — if step 3 is denied, step 2 (branch) is automatically rolled back
 - ✅ Audit trail — every phase emits structured audit events (workflow.started → step.preview → step.approval.requested → step.executed → workflow.completed)
 - ✅ Typed plugin contract — all inputs, outputs, and compensations are fully typed
+
+![IntentGraph Live Demo — workflow execution, approval gating, rollback, and policy engine](docs/screenshots/demo-workflow.png)
 
 ## Architecture
 
