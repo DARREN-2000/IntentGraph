@@ -102,7 +102,7 @@ export interface GitHubCloseIssueInput {
   repo: string;
   /** Issue number to close. */
   issueNumber: number;
-  /** Comment to add before closing. */
+  /** Comment to add before closing (required — closing without explanation is not allowed). */
   comment: string;
 }
 
