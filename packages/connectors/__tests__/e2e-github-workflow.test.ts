@@ -11,7 +11,7 @@ import {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function buildWorkflowSpec(prComment: string): WorkflowSpec {
+function buildWorkflowSpec(closeComment: string): WorkflowSpec {
   return {
     id: 'wf-github-issue-to-pr',
     title: 'GitHub Issue → Branch → PR → Close',
@@ -56,7 +56,7 @@ function buildWorkflowSpec(prComment: string): WorkflowSpec {
           owner: 'acme',
           repo: 'webapp',
           issueNumber: 2,
-          comment: prComment,
+          comment: closeComment,
         },
         requiresApproval: true,
         effects: ['write'],

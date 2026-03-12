@@ -2,9 +2,14 @@ import { createMockContext } from '@intentgraph/action-sdk';
 import { createMockGitHubClient, createGitHubActions } from '@intentgraph/connectors';
 
 describe('GitHub connector actions', () => {
-  const client = createMockGitHubClient();
-  const actions = createGitHubActions(client);
+  let client: ReturnType<typeof createMockGitHubClient>;
+  let actions: ReturnType<typeof createGitHubActions>;
   const ctx = createMockContext();
+
+  beforeEach(() => {
+    client = createMockGitHubClient();
+    actions = createGitHubActions(client);
+  });
 
   // ── github.get_issue ───────────────────────────────────────────────────
 
@@ -182,17 +187,8 @@ describe('GitHub connector actions', () => {
   // ── github.close_issue ───────────────────────────────────────────────
 
   describe('github.close_issue', () => {
-    // Use a fresh client per sub-describe to avoid state leakage
-    let freshClient: ReturnType<typeof createMockGitHubClient>;
-    let freshActions: ReturnType<typeof createGitHubActions>;
-
-    beforeEach(() => {
-      freshClient = createMockGitHubClient();
-      freshActions = createGitHubActions(freshClient);
-    });
-
     it('preview shows close info', async () => {
-      const result = await freshActions['github.close_issue'].preview(ctx, {
+      const result = await actions['github.close_issue'].preview(ctx, {
         owner: 'acme',
         repo: 'webapp',
         issueNumber: 3,
@@ -210,7 +206,7 @@ describe('GitHub connector actions', () => {
     });
 
     it('execute closes issue with comment and returns compensation', async () => {
-      const result = await freshActions['github.close_issue'].execute(ctx, {
+      const result = await actions['github.close_issue'].execute(ctx, {
         owner: 'acme',
         repo: 'webapp',
         issueNumber: 3,
@@ -228,12 +224,12 @@ describe('GitHub connector actions', () => {
       expect(result.compensation!.action).toBe('github.reopen_issue');
 
       // Verify issue is actually closed
-      const issue = freshClient.getIssue('acme', 'webapp', 3);
+      const issue = client.getIssue('acme', 'webapp', 3);
       expect(issue?.state).toBe('closed');
     });
 
     it('compensate reopens issue', async () => {
-      const execResult = await freshActions['github.close_issue'].execute(ctx, {
+      const execResult = await actions['github.close_issue'].execute(ctx, {
         owner: 'acme',
         repo: 'webapp',
         issueNumber: 3,
@@ -241,15 +237,15 @@ describe('GitHub connector actions', () => {
       });
 
       expect(execResult.ok).toBe(true);
-      expect(freshClient.getIssue('acme', 'webapp', 3)?.state).toBe('closed');
+      expect(client.getIssue('acme', 'webapp', 3)?.state).toBe('closed');
 
-      await freshActions['github.close_issue'].compensate!(
+      await actions['github.close_issue'].compensate!(
         ctx,
         execResult.compensation!.payload,
       );
 
       // Issue should be open again
-      expect(freshClient.getIssue('acme', 'webapp', 3)?.state).toBe('open');
+      expect(client.getIssue('acme', 'webapp', 3)?.state).toBe('open');
     });
   });
 });
