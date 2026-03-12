@@ -13,6 +13,11 @@
   </p>
 </p>
 
+![CI](https://github.com/DARREN-2000/IntentGraph/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)
+![Node](https://img.shields.io/badge/Node-%3E%3D20-green.svg)
+
 ---
 
 ## What is IntentGraph?
@@ -33,6 +38,34 @@ IntentGraph turns natural-language goals into **trusted, reusable workflows**. A
  and notify the manager."
 ```
 
+## Status: What's Implemented
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| Workflow Spec & Runtime | ✅ Implemented | Types, validation, step-by-step execution with preview, approval gating, retry, and rollback |
+| Action SDK | ✅ Implemented | `defineAction()` helper, `createMockContext()` for testing, typed plugin contract |
+| Policy Engine | ✅ Implemented | 8 default rules, risk classification, approval/block/warn decisions |
+| GitHub Connector (mock) | ✅ Implemented | 4 actions: get_issue, create_branch, create_pull_request, close_issue with full preview/execute/compensate |
+| End-to-End Demo | ✅ Implemented | "Issue → branch → PR → close" workflow with approval gating and rollback |
+| CI/CD Pipeline | ✅ Implemented | 5 GitHub Actions workflows: CI, Docker, Helm, Security, Release |
+| Infrastructure as Code | ✅ Implemented | Terraform (AWS), Helm charts, Kustomize overlays |
+| Control Plane API | 🔨 Scaffold | Express server with health/ready/version endpoints |
+| Worker | 🔨 Scaffold | Temporal-based execution worker |
+| Planner Service | 📋 Planned | Intent → WorkflowSpec compiler using LLM |
+| Web Dashboard | 📋 Planned | Next.js approval inbox and workflow viewer |
+| Additional Connectors | 📋 Planned | Slack, Gmail, Google Calendar, Jira, Notion |
+
+### Project Scope
+
+- **4 packages** with full source: workflow-spec, action-sdk, policy, connectors
+- **58 tests** across 5 test suites (unit + integration + end-to-end)
+- **4 GitHub action plugins** with preview/execute/compensate
+- **8 default policy rules** for risk-based approval gating
+- **7 effect categories** for fine-grained risk classification
+- **5 CI/CD workflows** with Node 20 + 22 matrix testing
+- **5 Terraform modules** for AWS deployment (VPC, EKS, RDS, Redis, S3)
+- **1 Helm chart** with HPA, PDB, network policies, and security contexts
+
 ## Quick Start
 
 ```bash
@@ -50,6 +83,28 @@ npm test
 # Format code
 npm run format
 ```
+
+## Demo: End-to-End Workflow
+
+The project includes a fully working end-to-end demo that proves the core contract works. Run it with:
+
+```bash
+cd packages/connectors && npx jest --verbose --testPathPattern e2e
+```
+
+**Scenario:** "Fix a bug reported in a GitHub issue"
+
+1. **Read issue** → `github.get_issue` fetches issue #2 ("Fix login redirect loop")
+2. **Create branch** → `github.create_branch` creates `fix/login-redirect` from `main`
+3. **Open draft PR** → `github.create_pull_request` creates a draft PR (requires approval ✋)
+4. **Close issue** → `github.close_issue` closes the issue with a comment linking the PR (requires approval ✋)
+
+**What the demo proves:**
+- ✅ Preview before execute — every step shows what it will do before doing it
+- ✅ Policy-driven approval gating — medium-risk external-communication actions require human approval
+- ✅ Compensation/rollback — if step 3 is denied, step 2 (branch) is automatically rolled back
+- ✅ Audit trail — every phase emits structured audit events (workflow.started → step.preview → step.approval.requested → step.executed → workflow.completed)
+- ✅ Typed plugin contract — all inputs, outputs, and compensations are fully typed
 
 ## Architecture
 
@@ -74,6 +129,8 @@ npm run format
 │      (Direct APIs, MCP, A2A, Browser)            │
 └─────────────────────────────────────────────────┘
 ```
+
+> 📄 **Design Doc:** [Why Action Plugins Require Preview/Execute/Compensate](docs/architecture/action-contract.md) — covers the three-phase contract, tradeoffs vs. sagas/ACID/event-sourcing, and risk classification.
 
 ### The Two-Layer Design
 
@@ -172,6 +229,10 @@ const sendEmail = defineAction<EmailInput, EmailOutput>({
 ### `@intentgraph/policy`
 
 Policy engine for risk assessment. Evaluates workflow steps against configurable rules to determine approval requirements and blocked actions.
+
+### `@intentgraph/connectors`
+
+Connector plugins for external services. Currently includes a **GitHub connector** with 4 action plugins (`get_issue`, `create_branch`, `create_pull_request`, `close_issue`), each implementing the full preview/execute/compensate contract with an in-memory mock client.
 
 ## Docker
 
