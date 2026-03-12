@@ -9,9 +9,9 @@
  * - Google Calendar / Outlook Calendar
  * - Google Drive / OneDrive
  * - Slack
- * - GitHub
+ * - GitHub ✅
  * - Notion / Jira
  * - Browser automation (fallback)
  */
 
-export {};
+export * from './github';
