@@ -85,6 +85,17 @@ describe('validateWorkflowSpec', () => {
     expect(errors.some((e) => e.message.includes('unknown step id'))).toBe(true);
   });
 
+  it('should detect circular dependsOn references', () => {
+    const errors = validateWorkflowSpec({
+      ...validSpec,
+      steps: [
+        { id: 'step-1', action: 'a', input: {}, requiresApproval: false, dependsOn: ['step-2'] },
+        { id: 'step-2', action: 'b', input: {}, requiresApproval: false, dependsOn: ['step-1'] },
+      ],
+    });
+    expect(errors.some((e) => e.message.includes('circular dependency detected'))).toBe(true);
+  });
+
   it('should require action on steps', () => {
     const errors = validateWorkflowSpec({
       ...validSpec,
