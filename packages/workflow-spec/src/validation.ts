@@ -121,7 +121,7 @@ export function validateWorkflowSpec(spec: unknown): ValidationError[] {
     const visiting = new Set<string>();
     const visited = new Set<string>();
 
-    const dfs = (stepId: string): void => {
+    const dfs = (stepId: string, path: string[]): void => {
       visiting.add(stepId);
 
       const stepIndex = indexByStepId.get(stepId);
@@ -132,14 +132,19 @@ export function validateWorkflowSpec(spec: unknown): ValidationError[] {
             continue;
           }
           if (visiting.has(dep)) {
+            const cycleStartIndex = path.indexOf(dep);
+            const cyclePath =
+              cycleStartIndex >= 0
+                ? [...path.slice(cycleStartIndex), dep].join(' -> ')
+                : `${stepId} -> ${dep}`;
             errors.push({
               path: `steps[${stepIndex}].dependsOn`,
-              message: `circular dependency detected: ${stepId} -> ${dep}`,
+              message: `circular dependency detected: ${cyclePath}`,
             });
             continue;
           }
           if (!visited.has(dep)) {
-            dfs(dep);
+            dfs(dep, [...path, dep]);
           }
         }
       }
@@ -150,7 +155,7 @@ export function validateWorkflowSpec(spec: unknown): ValidationError[] {
 
     for (const stepId of indexByStepId.keys()) {
       if (!visited.has(stepId)) {
-        dfs(stepId);
+        dfs(stepId, [stepId]);
       }
     }
   }
