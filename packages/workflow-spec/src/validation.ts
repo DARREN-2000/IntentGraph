@@ -93,8 +93,10 @@ export function validateWorkflowSpec(spec: unknown): ValidationError[] {
 
   // Validate dependsOn references point to existing steps
   if (Array.isArray(s.steps)) {
-    for (let i = 0; i < s.steps.length; i++) {
-      const step = s.steps[i] as WorkflowStep;
+    const steps = s.steps as WorkflowStep[];
+
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
       if (step.dependsOn) {
         for (const dep of step.dependsOn) {
           if (!stepIds.has(dep)) {
@@ -104,6 +106,56 @@ export function validateWorkflowSpec(spec: unknown): ValidationError[] {
             });
           }
         }
+      }
+    }
+
+    // Detect circular dependencies in dependsOn graph.
+    const indexByStepId = new Map<string, number>();
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      if (typeof step.id === 'string') {
+        indexByStepId.set(step.id, i);
+      }
+    }
+
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+
+    const dfs = (stepId: string, path: string[]): void => {
+      visiting.add(stepId);
+
+      const stepIndex = indexByStepId.get(stepId);
+      if (stepIndex !== undefined) {
+        const step = steps[stepIndex];
+        for (const dep of step.dependsOn ?? []) {
+          if (!indexByStepId.has(dep)) {
+            continue;
+          }
+          if (visiting.has(dep)) {
+            const cycleStartIndex = path.indexOf(dep);
+            const cyclePath =
+              cycleStartIndex >= 0
+                ? [...path.slice(cycleStartIndex), dep].join(' -> ')
+                : `${stepId} -> ${dep}`;
+            errors.push({
+              path: `steps[${stepIndex}].dependsOn`,
+              message: `circular dependency detected: ${cyclePath}`,
+            });
+            continue;
+          }
+          if (!visited.has(dep)) {
+            dfs(dep, [...path, dep]);
+          }
+        }
+      }
+
+      visiting.delete(stepId);
+      visited.add(stepId);
+    };
+
+    for (const stepId of indexByStepId.keys()) {
+      if (!visited.has(stepId)) {
+        dfs(stepId, [stepId]);
       }
     }
   }
