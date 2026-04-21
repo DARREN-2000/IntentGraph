@@ -1,352 +1,349 @@
-<p align="center">
-  <h1 align="center">IntentGraph</h1>
-  <p align="center">
-    <strong>A universal action OS that compiles natural-language intent into trusted workflows.</strong>
-  </p>
-  <p align="center">
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#architecture">Architecture</a> •
-    <a href="#packages">Packages</a> •
-    <a href="#docker">Docker</a> •
-    <a href="#kubernetes--helm">Kubernetes</a> •
-    <a href="#contributing">Contributing</a>
-  </p>
-</p>
+# IntentGraph
 
-![CI](https://github.com/DARREN-2000/IntentGraph/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)
-![Node](https://img.shields.io/badge/Node-%3E%3D20-green.svg)
+IntentGraph is a multi-tenant action OS that turns natural-language goals into trusted workflows.
 
----
+The project is built around one non-negotiable contract for side-effecting actions:
 
-## What is IntentGraph?
+1. `preview()` explains what will happen.
+2. `execute()` performs the side effect.
+3. `compensate()` rolls back where possible.
 
-IntentGraph turns natural-language goals into **trusted, reusable workflows**. A person says what they want in plain English, and the system converts that into a structured workflow with a plan, required tools, permissions, dry-run preview, approval rules, execution steps, rollback/compensation steps, an audit trail, and a reusable template.
+This repository includes the core workflow runtime, policy engine, connectors, control plane services, web dashboard, and a new CLI.
 
-**The core contract:** every action must be typed, previewable, approved when risky, replayable, and reversible.
+## Table of Contents
 
-### Examples
+1. [Product Principles](#product-principles)
+2. [Architecture at a Glance](#architecture-at-a-glance)
+3. [Monorepo Layout](#monorepo-layout)
+4. [Quick Start (Local)](#quick-start-local)
+5. [Web Dashboard](#web-dashboard)
+6. [CLI](#cli)
+7. [Screenshots and Demo Video](#screenshots-and-demo-video)
+8. [Build, Test, and Quality Gates](#build-test-and-quality-gates)
+9. [Deployment Paths](#deployment-paths)
+10. [Documentation Map](#documentation-map)
+11. [Troubleshooting](#troubleshooting)
+12. [Roadmap to Production-Ready](#roadmap-to-production-ready)
 
+## Product Principles
+
+IntentGraph follows these guarantees in design and implementation:
+
+1. Preview before execute.
+2. Human approval for risky actions (delete, spend, provision, or external send).
+3. Typed validation of all LLM outputs before action execution.
+4. Audit events for all workflow runs and critical step transitions.
+5. Policy checks before risky execution.
+6. Memory scoped by ownership boundaries (personal, org, project, session).
+
+## Architecture at a Glance
+
+```text
+User Intent (Web / CLI)
+	-> Planner Service (intent -> workflow spec)
+	-> Executor Service (policy + approvals + runtime)
+	-> Action Plugins (preview/execute/compensate)
+	-> Audit Service (event trail + integrity)
+	-> Memory Service (scoped context)
 ```
-"Pay my bills, track unusual increases, and store receipts."
 
-"When a bug issue appears, reproduce it, open a branch, write a failing test,
- propose a fix, and open a draft PR."
+Core building blocks:
 
-"Onboard this employee: create accounts, schedule training, grant access,
- and notify the manager."
+- `packages/workflow-spec`: workflow types and runtime.
+- `packages/action-sdk`: ergonomic action/plugin authoring.
+- `packages/policy`: policy checks and risk rules.
+- `packages/connectors`: side-effect connectors (GitHub, Slack, Gmail, etc.).
+- `services/*`: planner, executor, approvals, audit, memory.
+- `apps/web`: dashboard for intent planning and approval flow.
+- `packages/cli`: command line workflow planning and execution.
+
+## Monorepo Layout
+
+```text
+IntentGraph/
+	apps/
+		api/
+		web/
+		worker/
+		extension/
+	packages/
+		workflow-spec/
+		action-sdk/
+		connectors/
+		policy/
+		prompts/
+		shared/
+		ui/
+		cli/
+	services/
+		planner/
+		executor/
+		approvals/
+		audit/
+		memory/
+	docs/
+	infra/
 ```
 
-## Status: What's Implemented
+## Quick Start (Local)
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Workflow Spec & Runtime | ✅ Implemented | Types, validation, step-by-step execution with preview, approval gating, retry, and rollback |
-| Action SDK | ✅ Implemented | `defineAction()` helper, `createMockContext()` for testing, typed plugin contract |
-| Policy Engine | ✅ Implemented | 8 default rules, risk classification, approval/block/warn decisions |
-| GitHub Connector (mock) | ✅ Implemented | 4 actions: get_issue, create_branch, create_pull_request, close_issue with full preview/execute/compensate |
-| End-to-End Demo | ✅ Implemented | "Issue → branch → PR → close" workflow with approval gating and rollback |
-| CI/CD Pipeline | ✅ Implemented | 5 GitHub Actions workflows: CI, Docker, Helm, Security, Release |
-| Infrastructure as Code | ✅ Implemented | Terraform (AWS), Helm charts, Kustomize overlays |
-| Control Plane API | 🔨 Scaffold | Express server with health/ready/version endpoints |
-| Worker | 🔨 Scaffold | Temporal-based execution worker |
-| Planner Service | 📋 Planned | Intent → WorkflowSpec compiler using LLM |
-| Web Dashboard | 📋 Planned | Next.js approval inbox and workflow viewer |
-| Additional Connectors | 📋 Planned | Slack, Gmail, Google Calendar, Jira, Notion |
+### Prerequisites
 
-### Project Scope
+- Node.js >= 20
+- npm >= 10
+- Docker + Docker Compose (recommended for full stack)
+- Helm (optional for chart validation)
 
-- **4 packages** with full source: workflow-spec, action-sdk, policy, connectors
-- **58 tests** across 5 test suites (unit + integration + end-to-end)
-- **4 GitHub action plugins** with preview/execute/compensate
-- **8 default policy rules** for risk-based approval gating
-- **7 effect categories** for fine-grained risk classification
-- **5 CI/CD workflows** with Node 20 + 22 matrix testing
-- **5 Terraform modules** for AWS deployment (VPC, EKS, RDS, Redis, S3)
-- **1 Helm chart** with HPA, PDB, network policies, and security contexts
-
-![IntentGraph Test Suite — 58 tests passing across 5 suites](docs/screenshots/test-suite.png)
-
-## Quick Start
+### 1) Install dependencies
 
 ```bash
-# Prerequisites: Node.js >= 20, npm >= 10
-
-# Install dependencies
 npm install
+```
 
-# Build all packages
+### 2) Build workspace
+
+```bash
 npm run build
+```
 
-# Run all tests
+### 3) Run tests
+
+```bash
 npm test
-
-# Format code
-npm run format
 ```
 
-## Demo: End-to-End Workflow
-
-The project includes a fully working end-to-end demo that proves the core contract works. Run it with:
+### 4) Run local services with Docker
 
 ```bash
-cd packages/connectors && npx jest --verbose --testPathPattern e2e
-```
-
-**Scenario:** "Fix a bug reported in a GitHub issue"
-
-1. **Read issue** → `github.get_issue` fetches issue #2 ("Fix login redirect loop")
-2. **Create branch** → `github.create_branch` creates `fix/login-redirect` from `main`
-3. **Open draft PR** → `github.create_pull_request` creates a draft PR (requires approval ✋)
-4. **Close issue** → `github.close_issue` closes the issue with a comment linking the PR (requires approval ✋)
-
-**What the demo proves:**
-- ✅ Preview before execute — every step shows what it will do before doing it
-- ✅ Policy-driven approval gating — medium-risk external-communication actions require human approval
-- ✅ Compensation/rollback — if step 3 is denied, step 2 (branch) is automatically rolled back
-- ✅ Audit trail — every phase emits structured audit events (workflow.started → step.preview → step.approval.requested → step.executed → workflow.completed)
-- ✅ Typed plugin contract — all inputs, outputs, and compensations are fully typed
-
-![IntentGraph Live Demo — workflow execution, approval gating, rollback, and policy engine](docs/screenshots/demo-workflow.png)
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│                  Frontend Layer                  │
-│         (Web App, Browser Extension, Bots)       │
-├─────────────────────────────────────────────────┤
-│                Control Plane (API)               │
-│      (Request routing, auth, session mgmt)       │
-├─────────────────────────────────────────────────┤
-│                  Agent Plane                     │
-│   (Router, Planner, Context, Risk, Critic)       │
-├─────────────────────────────────────────────────┤
-│                Workflow Plane                    │
-│     (Temporal, LangGraph, Event Sourcing)        │
-├─────────────────────────────────────────────────┤
-│                  Trust Plane                     │
-│   (OpenFGA, Vault, Audit, Approval Engine)       │
-├─────────────────────────────────────────────────┤
-│                Connector Plane                   │
-│      (Direct APIs, MCP, A2A, Browser)            │
-└─────────────────────────────────────────────────┘
-```
-
-> 📄 **Design Doc:** [Why Action Plugins Require Preview/Execute/Compensate](docs/architecture/action-contract.md) — covers the three-phase contract, tradeoffs vs. sagas/ACID/event-sourcing, and risk classification.
-
-### The Two-Layer Design
-
-1. **Agent Layer** — decides what should happen (dynamic reasoning)
-2. **Workflow Layer** — runs it reliably (deterministic execution)
-
-### The Universal Plugin Contract
-
-Every action plugin implements:
-
-```typescript
-interface ActionPlugin<I, O> {
-  key: string;                  // e.g. "gmail.send_draft"
-  risk: RiskLevel;              // "low" | "medium" | "high" | "critical"
-  effects: EffectCategory[];    // what kind of side effects
-  preview(ctx, input): Promise<ActionResult<O>>;    // show what will happen
-  execute(ctx, input): Promise<ActionResult<O>>;    // do it
-  compensate?(ctx, payload): Promise<void>;         // undo it
-}
-```
-
-If an action cannot preview and compensate, it is not production-ready.
-
-## Repo Structure
-
-```
-apps/
-  api/            # Control plane API service
-  worker/         # Workflow execution worker
-  web/            # Next.js web dashboard
-  extension/      # Browser extension
-
-packages/
-  workflow-spec/  # Core types + workflow runtime
-  action-sdk/     # SDK for building action plugins
-  connectors/     # Connector plugins for external services
-  policy/         # Policy engine + approval rules
-  prompts/        # Versioned LLM prompts
-  ui/             # Shared UI components
-  shared/         # Shared utilities
-
-services/
-  planner/        # Intent → WorkflowSpec compiler
-  executor/       # Durable workflow executor
-  approvals/      # Approval engine
-  memory/         # Scoped context memory
-  audit/          # Audit trail service
-
-infra/
-  docker/         # Docker configurations
-  helm/           # Helm charts for Kubernetes
-  k8s/            # Raw Kubernetes manifests (Kustomize)
-  terraform/      # Infrastructure as Code (AWS)
-
-docs/
-  architecture/   # Architecture documentation
-  prd/            # Product requirements
-  runbooks/       # Operational runbooks
-```
-
-## Packages
-
-### `@intentgraph/workflow-spec`
-
-Core types and workflow runtime. Defines `WorkflowSpec`, `WorkflowStep`, `ActionContext`, `ActionResult`, and the `runWorkflow()` engine with preview, approval gating, retry, and automatic rollback.
-
-### `@intentgraph/action-sdk`
-
-SDK for building action plugins. Provides `defineAction()` helper and `createMockContext()` for testing.
-
-```typescript
-import { defineAction } from '@intentgraph/action-sdk';
-
-const sendEmail = defineAction<EmailInput, EmailOutput>({
-  key: 'gmail.send_draft',
-  risk: 'medium',
-  effects: ['external-communication'],
-  description: 'Send an email draft via Gmail',
-  async preview(ctx, input) {
-    return { ok: true, preview: { to: input.to, subject: input.subject } };
-  },
-  async execute(ctx, input) {
-    const messageId = await gmail.send(input);
-    return {
-      ok: true,
-      output: { messageId },
-      compensation: { action: 'gmail.delete_message', payload: { messageId } },
-    };
-  },
-  async compensate(ctx, payload) {
-    await gmail.trash((payload as any).messageId);
-  },
-});
-```
-
-### `@intentgraph/policy`
-
-Policy engine for risk assessment. Evaluates workflow steps against configurable rules to determine approval requirements and blocked actions.
-
-### `@intentgraph/connectors`
-
-Connector plugins for external services. Currently includes a **GitHub connector** with 4 action plugins (`get_issue`, `create_branch`, `create_pull_request`, `close_issue`), each implementing the full preview/execute/compensate contract with an in-memory mock client.
-
-## Docker
-
-### Development with Docker Compose
-
-```bash
-# Start everything: API, Worker, Postgres, Redis, NATS, Temporal
 docker compose up -d
-
-# View logs
 docker compose logs -f api
-
-# Stop
-docker compose down
 ```
 
-### Build images individually
+### 5) Run web dashboard
 
 ```bash
-docker build -t intentgraph/api -f apps/api/Dockerfile .
-docker build -t intentgraph/worker -f apps/worker/Dockerfile .
+cd apps/web
+npm run dev
 ```
 
-## Kubernetes & Helm
+By default the dashboard is available on `http://localhost:3000`.
 
-### Helm Chart
+### 6) Health checks
 
 ```bash
-# Lint
+curl http://localhost:3001/healthz
+curl http://localhost:3001/readyz
+curl http://localhost:3001/api/v1/version
+```
+
+## Web Dashboard
+
+The dashboard currently supports:
+
+1. Natural-language intent input.
+2. Workflow planning with confidence score.
+3. Workflow execution from the queue.
+4. Approval queue for gated/risky actions.
+5. Action catalog visibility.
+
+Primary implementation entrypoint:
+
+- `apps/web/src/pages/index.tsx`
+
+API handlers used by the dashboard:
+
+- `apps/web/src/pages/api/plan.ts`
+- `apps/web/src/pages/api/execute.ts`
+- `apps/web/src/pages/api/workflows/index.ts`
+- `apps/web/src/pages/api/approvals/index.ts`
+- `apps/web/src/pages/api/approvals/[approvalId]/approve.ts`
+
+## CLI
+
+The repository now includes a dedicated CLI workspace package at `packages/cli`.
+
+### Build CLI
+
+```bash
+npm run cli:build
+```
+
+### Run CLI (workspace shortcut)
+
+```bash
+npm run cli -- help
+```
+
+### Commands
+
+```text
+intentgraph help
+intentgraph actions list
+intentgraph plan --intent "Create an issue in github repo: my-repo"
+intentgraph run --intent "Create a pull request in github repo: my-repo" --auto-approve
+intentgraph doctor
+```
+
+### JSON output mode
+
+All core commands support `--json` or `-j` for machine-readable output.
+
+```bash
+npm run cli -- plan --intent "Send an email to dev@example.com" --json
+```
+
+### CLI implementation notes
+
+- `plan` compiles intent into a workflow proposal.
+- `run` plans and executes in one command.
+- `run --auto-approve` auto-approves local demo gates.
+- `doctor` validates environment and local endpoint reachability.
+
+## Screenshots and Demo Video
+
+### Dashboard Screenshots
+
+![Dashboard home](docs/screenshots/dashboard-home.png)
+![Workflow planned](docs/screenshots/dashboard-workflow-planned.png)
+![Execution complete](docs/screenshots/dashboard-execution-complete.png)
+![Waiting approval](docs/screenshots/dashboard-waiting-approval.png)
+![Approval complete](docs/screenshots/dashboard-approval-complete.png)
+![Mobile view](docs/screenshots/dashboard-mobile.png)
+
+### Demo Video
+
+- [IntentGraph dashboard demo (WebM)](docs/videos/intentgraph-dashboard-demo.webm)
+
+### Regenerate Media Artifacts
+
+```bash
+node docs/scripts/capture-dashboard-demo.mjs
+```
+
+Artifacts are written to:
+
+- `docs/screenshots/`
+- `docs/videos/`
+
+## Build, Test, and Quality Gates
+
+### Core Commands
+
+```bash
+npm run build
+npm run test
+npm run lint
+npm run format:check
+```
+
+### Makefile shortcuts
+
+```bash
+make install
+make build
+make test
+make lint
+make ci
+make cli-build
+make cli ARGS="help"
+```
+
+### CI Workflows
+
+- `.github/workflows/ci.yml`
+- `.github/workflows/security.yml`
+- `.github/workflows/docker-build.yml`
+- `.github/workflows/helm-lint.yml`
+- `.github/workflows/release.yml`
+
+## Deployment Paths
+
+### Docker Compose (local integration)
+
+- `docker-compose.yml` runs Postgres, Redis, NATS, Temporal, API, and Worker.
+
+### Kubernetes + Helm
+
+- Chart: `infra/helm/intentgraph`
+
+Validate chart:
+
+```bash
 helm lint infra/helm/intentgraph
-
-# Template
 helm template intentgraph infra/helm/intentgraph
-
-# Install
-helm install intentgraph infra/helm/intentgraph \
-  --namespace intentgraph --create-namespace
-
-# Upgrade
-helm upgrade intentgraph infra/helm/intentgraph \
-  --namespace intentgraph
 ```
 
-### Kustomize (raw manifests)
+### Terraform
+
+- Root: `infra/terraform/main.tf`
+- Modules: VPC, EKS, RDS, Redis, S3 under `infra/terraform/modules`
+
+## Documentation Map
+
+Architecture and product:
+
+- `docs/architecture/overview.md`
+- `docs/architecture/action-contract.md`
+- `docs/prd/v1.md`
+
+Runbooks:
+
+- `docs/runbooks/local-development.md`
+- `docs/runbooks/incident-response.md`
+
+Media automation:
+
+- `docs/scripts/capture-dashboard-demo.mjs`
+
+## Troubleshooting
+
+### 1) Build fails
 
 ```bash
-# Dev overlay
-kubectl apply -k infra/k8s/overlays/dev
-
-# Staging
-kubectl apply -k infra/k8s/overlays/staging
-
-# Production
-kubectl apply -k infra/k8s/overlays/prod
+npm run clean
+npm install
+npm run build
 ```
 
-### Infrastructure features
+### 2) Tests fail after dependency changes
 
-- **HPA** — Auto-scaling based on CPU/memory
-- **PDB** — Pod Disruption Budget for high availability
-- **Network Policies** — Restrict pod-to-pod traffic
-- **Security Contexts** — Non-root, read-only filesystem, dropped capabilities
-- **Health checks** — Liveness and readiness probes on all services
-
-## CI/CD
-
-| Workflow | Trigger | Description |
-|----------|---------|-------------|
-| `ci.yml` | Push/PR to main | Lint, type check, test (Node 20 & 22), build |
-| `docker-build.yml` | Push/PR to main, tags | Build and push Docker images to GHCR |
-| `helm-lint.yml` | Changes to `infra/helm/` | Lint and template Helm charts |
-| `security.yml` | Push/PR, weekly schedule | npm audit, Trivy container scan |
-| `release.yml` | Tag push (`v*`) | Build, test, create GitHub Release |
-
-## Infrastructure as Code
-
-Terraform modules for AWS deployment:
-
-```
-infra/terraform/
-  main.tf              # Root module
-  modules/
-    vpc/               # VPC, subnets, NAT
-    eks/               # EKS cluster, node groups
-    rds/               # PostgreSQL RDS
-    redis/             # ElastiCache Redis
-    s3/                # S3 buckets
+```bash
+npm test
 ```
 
-## Product Rules
+Run package-level tests when debugging:
 
-- **Preview before execute** — every action shows what it will do before doing it
-- **Human approval** for delete, spend, provision, or external send
-- **Rollback/compensation** — every write action must provide a way to undo
-- **Audit trail** — every workflow run emits structured audit events
-- **Memory scopes** — personal, org, project, and session memory are strictly separated
-- **API first** — prefer direct APIs over browser automation
-- **Typed schemas** — no untyped JSON blobs in public interfaces
-- **Idempotency** — every write action uses idempotency keys
+```bash
+cd packages/workflow-spec && npx jest --ci
+cd packages/action-sdk && npx jest --ci
+cd packages/policy && npx jest --ci
+cd packages/connectors && npx jest --ci
+```
 
-## Contributing
+### 3) Dashboard API route errors
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Ensure `npm test` passes
-5. Submit a pull request
+Check local API utility behavior in:
 
-See [AGENTS.md](./AGENTS.md) for coding agent instructions and architecture rules.
+- `apps/web/src/server/api-utils.ts`
 
-## License
+### 4) Docker stack not healthy
 
-[Apache License 2.0](./LICENSE)
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+## Roadmap to Production-Ready
+
+Current foundation is strong, and the active implementation path is:
+
+1. API-first control plane wiring (move business orchestration out of web process).
+2. Durable persistence for workflows, approvals, memory, and audit data.
+3. Security hardening (authn, authz, tenancy boundaries).
+4. Reliability hardening (idempotency, retry/backoff, compensation tests).
+5. Observability (structured logs, metrics, tracing, alerts).
+6. Web UX polish (design system, responsive/a11y quality gates).
+7. CLI UX polish (ergonomic command set and automation-first output).
+8. CI/CD release gates and staged rollout drills.
+
+These principles and constraints are codified in `AGENTS.md`.

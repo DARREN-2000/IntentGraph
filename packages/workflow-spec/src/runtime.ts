@@ -1,71 +1,343 @@
 import type {
   ActionContext,
   ActionResult,
-  Compensation,
+  AuditEvent,
+  WorkflowRun,
   WorkflowSpec,
   WorkflowStep,
-  WorkflowRun,
   WorkflowStepRun,
-  AuditEvent,
 } from './types';
 
 /**
  * The universal action plugin contract.
- * Every connector and action must implement this interface.
- *
- * - preview(): show what will happen without side effects
- * - execute(): perform the action
- * - compensate(): reverse the action (best-effort rollback)
  */
 export interface ActionPlugin<I = unknown, O = unknown> {
-  /** Unique key identifying this action (e.g. "gmail.send_draft") */
   key: string;
-  /** Risk classification */
   risk: import('./types').RiskLevel;
-  /** Effect categories */
   effects: import('./types').EffectCategory[];
-  /** Human-readable description */
   description: string;
-  /** Preview what the action would do (must NOT produce side effects) */
   preview(ctx: ActionContext, input: I): Promise<ActionResult<O>>;
-  /** Execute the action */
   execute(ctx: ActionContext, input: I): Promise<ActionResult<O>>;
-  /** Reverse the action using compensation data from a prior execute() */
   compensate?(ctx: ActionContext, payload: unknown): Promise<void>;
 }
 
-/**
- * Approval callback signature.
- * Returns true if the step is approved, false if denied.
- */
-export type ApprovalCallback = (
-  step: WorkflowStep,
-  preview: unknown,
-) => Promise<boolean>;
+interface PluginRegistry {
+  get(actionKey: string): ActionPlugin<unknown, unknown> | null;
+}
 
-/**
- * Audit event emitter callback.
- */
+interface ApprovalChecker {
+  check(step: WorkflowStep, context: ActionContext, preview: unknown): Promise<boolean>;
+}
+
+export class WorkflowRuntime {
+  private plugins: PluginRegistry;
+  private approvalChecker: ApprovalChecker;
+
+  constructor(plugins: PluginRegistry, approvalChecker: ApprovalChecker) {
+    this.plugins = plugins;
+    this.approvalChecker = approvalChecker;
+  }
+
+  async runWorkflow(spec: WorkflowSpec, context: ActionContext): Promise<WorkflowRun> {
+    const run: WorkflowRun = {
+      id: context.requestId,
+      workflowId: spec.id,
+      specId: spec.id,
+      status: 'running',
+      currentStepIndex: 0,
+      results: {},
+      stepRuns: [],
+      startedAt: new Date().toISOString(),
+      context,
+    };
+
+    await this.emitAudit(context, {
+      type: 'workflow.started',
+      timestamp: run.startedAt,
+      userId: context.userId,
+      sessionId: context.sessionId,
+      workflowId: run.id,
+      workflowRunId: run.id,
+      actorId: context.userId,
+      data: { specId: spec.id, stepCount: spec.steps.length },
+    });
+
+    for (let i = 0; i < spec.steps.length; i += 1) {
+      const step = spec.steps[i];
+      run.currentStepIndex = i;
+
+      const result = await this.executeStep(step, context, run);
+      if (run.results) {
+        run.results[step.id] = result;
+      }
+
+      if (!result.ok) {
+        run.status = 'failed';
+        await this.rollback(run, spec, context, i);
+        break;
+      }
+
+      if (i === spec.steps.length - 1) {
+        run.status = 'completed';
+      }
+    }
+
+    run.completedAt = new Date().toISOString();
+    await this.emitAudit(context, {
+      type: `workflow.${run.status}`,
+      timestamp: run.completedAt,
+      userId: context.userId,
+      sessionId: context.sessionId,
+      workflowId: run.id,
+      workflowRunId: run.id,
+      actorId: context.userId,
+      data: { status: run.status },
+    });
+
+    return run;
+  }
+
+  private async executeStep(
+    step: WorkflowStep,
+    context: ActionContext,
+    run: WorkflowRun,
+  ): Promise<ActionResult<unknown>> {
+    const plugin = this.plugins.get(step.action);
+    const stepRun: WorkflowStepRun = {
+      stepId: step.id,
+      action: step.action,
+      status: 'previewing',
+      retryCount: 0,
+      startedAt: new Date().toISOString(),
+    };
+    run.stepRuns.push(stepRun);
+
+    if (!plugin) {
+      stepRun.status = 'failed';
+      stepRun.error = `Missing action plugin: ${step.action}`;
+      stepRun.completedAt = new Date().toISOString();
+      await this.emitAudit(context, {
+        type: 'step.failed',
+        timestamp: new Date().toISOString(),
+        userId: context.userId,
+        sessionId: context.sessionId,
+        workflowId: run.id,
+        workflowRunId: run.id,
+        stepId: step.id,
+        actorId: context.userId,
+        data: { error: stepRun.error },
+      });
+      return { ok: false, error: stepRun.error };
+    }
+
+    const previewResult = await plugin.preview({ ...context, dryRun: true }, step.input);
+    stepRun.preview = previewResult.preview ?? previewResult.output ?? null;
+    await this.emitAudit(context, {
+      type: 'step.preview',
+      timestamp: new Date().toISOString(),
+      userId: context.userId,
+      sessionId: context.sessionId,
+      workflowId: run.id,
+      workflowRunId: run.id,
+      stepId: step.id,
+      actorId: context.userId,
+      data: { action: step.action, preview: stepRun.preview },
+    });
+
+    if (!previewResult.ok) {
+      stepRun.status = 'failed';
+      stepRun.error = previewResult.error || 'Preview failed';
+      stepRun.completedAt = new Date().toISOString();
+      return previewResult;
+    }
+
+    if (step.requiresApproval) {
+      stepRun.status = 'waiting-approval';
+      await this.emitAudit(context, {
+        type: 'step.approval.requested',
+        timestamp: new Date().toISOString(),
+        userId: context.userId,
+        sessionId: context.sessionId,
+        workflowId: run.id,
+        workflowRunId: run.id,
+        stepId: step.id,
+        actorId: context.userId,
+        data: { action: step.action },
+      });
+
+      const approved = await this.approvalChecker.check(step, context, stepRun.preview);
+      if (!approved) {
+        stepRun.status = 'failed';
+        stepRun.error = `Approval denied for ${step.action}`;
+        stepRun.completedAt = new Date().toISOString();
+        await this.emitAudit(context, {
+          type: 'step.approval.denied',
+          timestamp: new Date().toISOString(),
+          userId: context.userId,
+          sessionId: context.sessionId,
+          workflowId: run.id,
+          workflowRunId: run.id,
+          stepId: step.id,
+          actorId: context.userId,
+        });
+        return { ok: false, error: 'Approval denied' };
+      }
+
+      await this.emitAudit(context, {
+        type: 'step.approval.granted',
+        timestamp: new Date().toISOString(),
+        userId: context.userId,
+        sessionId: context.sessionId,
+        workflowId: run.id,
+        workflowRunId: run.id,
+        stepId: step.id,
+        actorId: context.userId,
+      });
+    }
+
+    stepRun.status = 'executing';
+    const maxRetries = step.maxRetries ?? 0;
+    let lastError: unknown;
+    let executeResult: ActionResult<unknown> | undefined;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      try {
+        executeResult = await plugin.execute({ ...context, dryRun: false }, step.input);
+        stepRun.retryCount = attempt;
+        lastError = undefined;
+        break;
+      } catch (error) {
+        lastError = error;
+        stepRun.retryCount = attempt + 1;
+      }
+    }
+
+    if (lastError || !executeResult) {
+      const message =
+        lastError instanceof Error ? lastError.message : String(lastError ?? 'Unknown error');
+      stepRun.status = 'failed';
+      stepRun.error = message;
+      stepRun.completedAt = new Date().toISOString();
+      await this.emitAudit(context, {
+        type: 'step.failed',
+        timestamp: new Date().toISOString(),
+        userId: context.userId,
+        sessionId: context.sessionId,
+        workflowId: run.id,
+        workflowRunId: run.id,
+        stepId: step.id,
+        actorId: context.userId,
+        data: { error: message, retries: stepRun.retryCount },
+      });
+      return { ok: false, error: message };
+    }
+
+    stepRun.status = 'completed';
+    stepRun.output = executeResult.output;
+    stepRun.compensation = executeResult.compensation;
+    stepRun.completedAt = new Date().toISOString();
+
+    await this.emitAudit(context, {
+      type: 'step.executed',
+      timestamp: new Date().toISOString(),
+      userId: context.userId,
+      sessionId: context.sessionId,
+      workflowId: run.id,
+      workflowRunId: run.id,
+      stepId: step.id,
+      actorId: context.userId,
+      data: { action: step.action, output: executeResult.output },
+    });
+
+    return executeResult;
+  }
+
+  private async rollback(
+    run: WorkflowRun,
+    spec: WorkflowSpec,
+    context: ActionContext,
+    failedIndex: number,
+  ): Promise<void> {
+    for (let i = failedIndex - 1; i >= 0; i -= 1) {
+      const step = spec.steps[i];
+      const result = run.results?.[step.id] as ActionResult<unknown> | undefined;
+      if (!result?.compensation) {
+        continue;
+      }
+
+      const plugin = this.plugins.get(step.action) || this.plugins.get(result.compensation.action);
+      if (!plugin?.compensate) {
+        continue;
+      }
+
+      try {
+        await plugin.compensate(context, result.compensation.payload);
+        const existingStepRun = run.stepRuns.find((s) => s.stepId === step.id);
+        if (existingStepRun) {
+          existingStepRun.status = 'compensated';
+        }
+        await this.emitAudit(context, {
+          type: 'step.compensated',
+          timestamp: new Date().toISOString(),
+          userId: context.userId,
+          sessionId: context.sessionId,
+          workflowId: run.id,
+          workflowRunId: run.id,
+          stepId: step.id,
+          actorId: context.userId,
+          data: { action: step.action },
+        });
+      } catch (error) {
+        await this.emitAudit(context, {
+          type: 'step.failed',
+          timestamp: new Date().toISOString(),
+          userId: context.userId,
+          sessionId: context.sessionId,
+          workflowId: run.id,
+          workflowRunId: run.id,
+          stepId: step.id,
+          actorId: context.userId,
+          data: { phase: 'compensation', error: String(error) },
+        });
+      }
+    }
+
+    run.status = 'rolled-back';
+    await this.emitAudit(context, {
+      type: 'workflow.rolled-back',
+      timestamp: new Date().toISOString(),
+      userId: context.userId,
+      sessionId: context.sessionId,
+      workflowId: run.id,
+      workflowRunId: run.id,
+      actorId: context.userId,
+    });
+  }
+
+  private async emitAudit(context: ActionContext, event: AuditEvent): Promise<void> {
+    if (context.audit) {
+      await context.audit.log(event);
+    }
+  }
+}
+
+export type ApprovalCallback = (step: WorkflowStep, preview: unknown) => Promise<boolean>;
 export type AuditEmitter = (event: Omit<AuditEvent, 'id' | 'timestamp'>) => void;
 
-/**
- * Options for the workflow runner.
- */
 export interface RunWorkflowOptions {
-  /** Called when a step requires human approval */
   approve: ApprovalCallback;
-  /** Called for every audit-worthy event */
   onAuditEvent?: AuditEmitter;
-  /** Called when a step completes */
   onStepComplete?: (stepRun: WorkflowStepRun) => void;
-  /** Abort signal for cancellation */
   signal?: AbortSignal;
 }
 
-/**
- * Execute a workflow spec step-by-step with preview, approval gating,
- * durable execution, and automatic rollback on failure.
- */
+export function createRuntime(
+  plugins: PluginRegistry,
+  approvalChecker: ApprovalChecker,
+): WorkflowRuntime {
+  return new WorkflowRuntime(plugins, approvalChecker);
+}
+
 export async function runWorkflow(
   spec: WorkflowSpec,
   ctx: ActionContext,
@@ -74,247 +346,59 @@ export async function runWorkflow(
 ): Promise<WorkflowRun> {
   const { approve, onAuditEvent, onStepComplete, signal } = options;
 
-  const run: WorkflowRun = {
-    id: ctx.requestId,
-    workflowId: spec.id,
-    status: 'running',
-    stepRuns: [],
-    startedAt: new Date().toISOString(),
-    context: ctx,
-  };
-
-  const emit = (event: Omit<AuditEvent, 'id' | 'timestamp'>) => {
-    if (onAuditEvent) {
-      onAuditEvent(event);
-    }
-  };
-
-  emit({
-    type: 'workflow.started',
-    workflowRunId: run.id,
-    actorId: ctx.userId,
-    data: { workflowId: spec.id, title: spec.title },
-  });
-
-  const completed: Array<{ plugin: ActionPlugin<any, any>; comp?: Compensation; stepId: string }> =
-    [];
-
-  for (const step of spec.steps) {
-    // Check for cancellation
-    if (signal?.aborted) {
-      run.status = 'cancelled';
-      break;
-    }
-
-    const plugin = registry[step.action];
-    if (!plugin) {
-      run.status = 'failed';
-      const stepRun: WorkflowStepRun = {
-        stepId: step.id,
-        action: step.action,
-        status: 'failed',
-        error: `Missing action plugin: ${step.action}`,
-        retryCount: 0,
-      };
-      run.stepRuns.push(stepRun);
-      emit({
-        type: 'step.failed',
-        workflowRunId: run.id,
-        stepId: step.id,
-        actorId: ctx.userId,
-        data: { error: stepRun.error },
-      });
-
-      // Rollback completed steps
-      await rollback(completed, ctx, emit, run);
-      run.completedAt = new Date().toISOString();
-      return run;
-    }
-
-    const stepRun: WorkflowStepRun = {
-      stepId: step.id,
-      action: step.action,
-      status: 'previewing',
-      retryCount: 0,
+  if (signal?.aborted) {
+    return {
+      id: ctx.requestId,
+      workflowId: spec.id,
+      status: 'cancelled',
+      stepRuns: [],
       startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      context: ctx,
     };
-
-    // 1. Preview
-    const previewResult = await plugin.preview({ ...ctx, dryRun: true }, step.input);
-    stepRun.preview = previewResult.preview ?? previewResult.output ?? null;
-
-    emit({
-      type: 'step.preview',
-      workflowRunId: run.id,
-      stepId: step.id,
-      actorId: ctx.userId,
-      data: { preview: stepRun.preview },
-    });
-
-    // 2. Approval gating
-    if (step.requiresApproval) {
-      stepRun.status = 'waiting-approval';
-      run.status = 'waiting-approval';
-
-      emit({
-        type: 'step.approval.requested',
-        workflowRunId: run.id,
-        stepId: step.id,
-        actorId: ctx.userId,
-        data: { action: step.action, preview: stepRun.preview },
-      });
-
-      const allowed = await approve(step, stepRun.preview);
-
-      if (!allowed) {
-        stepRun.status = 'failed';
-        stepRun.error = `Approval denied for ${step.action}`;
-        stepRun.completedAt = new Date().toISOString();
-        run.stepRuns.push(stepRun);
-        run.status = 'failed';
-
-        emit({
-          type: 'step.approval.denied',
-          workflowRunId: run.id,
-          stepId: step.id,
-          actorId: ctx.userId,
-        });
-
-        await rollback(completed, ctx, emit, run);
-        run.completedAt = new Date().toISOString();
-        return run;
-      }
-
-      emit({
-        type: 'step.approval.granted',
-        workflowRunId: run.id,
-        stepId: step.id,
-        actorId: ctx.userId,
-      });
-
-      run.status = 'running';
-    }
-
-    // 3. Execute with retry
-    stepRun.status = 'executing';
-    const maxRetries = step.maxRetries ?? 0;
-    let lastError: unknown;
-    let result: ActionResult | undefined;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        result = await plugin.execute({ ...ctx, dryRun: false }, step.input);
-        lastError = undefined;
-        break;
-      } catch (err) {
-        lastError = err;
-        stepRun.retryCount = attempt + 1;
-      }
-    }
-
-    if (lastError || !result) {
-      const errorMessage =
-        lastError instanceof Error ? lastError.message : String(lastError ?? 'Unknown error');
-      stepRun.status = 'failed';
-      stepRun.error = errorMessage;
-      stepRun.completedAt = new Date().toISOString();
-      run.stepRuns.push(stepRun);
-      run.status = 'failed';
-
-      emit({
-        type: 'step.failed',
-        workflowRunId: run.id,
-        stepId: step.id,
-        actorId: ctx.userId,
-        data: { error: errorMessage, retries: stepRun.retryCount },
-      });
-
-      await rollback(completed, ctx, emit, run);
-      run.completedAt = new Date().toISOString();
-      return run;
-    }
-
-    // Success
-    stepRun.status = 'completed';
-    stepRun.output = result.output;
-    stepRun.compensation = result.compensation;
-    stepRun.completedAt = new Date().toISOString();
-    run.stepRuns.push(stepRun);
-
-    completed.push({ plugin, comp: result.compensation, stepId: step.id });
-
-    emit({
-      type: 'step.executed',
-      workflowRunId: run.id,
-      stepId: step.id,
-      actorId: ctx.userId,
-      data: { output: result.output },
-    });
-
-    if (onStepComplete) {
-      onStepComplete(stepRun);
-    }
   }
 
-  if (run.status === 'running') {
-    run.status = 'completed';
-  }
-  run.completedAt = new Date().toISOString();
-
-  emit({
-    type: run.status === 'completed' ? 'workflow.completed' : 'workflow.failed',
-    workflowRunId: run.id,
-    actorId: ctx.userId,
-  });
-
-  return run;
-}
-
-/**
- * Rollback completed steps in reverse order.
- */
-async function rollback(
-  completed: Array<{ plugin: ActionPlugin<any, any>; comp?: Compensation; stepId: string }>,
-  ctx: ActionContext,
-  emit: (event: Omit<AuditEvent, 'id' | 'timestamp'>) => void,
-  run: WorkflowRun,
-): Promise<void> {
-  for (const item of [...completed].reverse()) {
-    if (item.plugin.compensate && item.comp) {
-      try {
-        await item.plugin.compensate(ctx, item.comp.payload);
-
-        // Update the step run status
-        const stepRun = run.stepRuns.find((sr) => sr.stepId === item.stepId);
-        if (stepRun) {
-          stepRun.status = 'compensated';
+  const wrappedContext: ActionContext = {
+    ...ctx,
+    sessionId: ctx.sessionId || ctx.requestId,
+    audit: onAuditEvent
+      ? {
+          log(event: AuditEvent): void {
+            onAuditEvent({
+              type: event.type,
+              workflowRunId: event.workflowRunId || event.workflowId || ctx.requestId,
+              stepId: event.stepId,
+              actorId: event.actorId || event.userId || ctx.userId,
+              data: event.data,
+            });
+          },
         }
+      : undefined,
+  };
 
-        emit({
-          type: 'step.compensated',
-          workflowRunId: run.id,
-          stepId: item.stepId,
-          actorId: ctx.userId,
-        });
-      } catch {
-        // Compensation failures are logged but don't stop the rollback
-        emit({
-          type: 'step.failed',
-          workflowRunId: run.id,
-          stepId: item.stepId,
-          actorId: ctx.userId,
-          data: { phase: 'compensation' },
-        });
+  const runtime = createRuntime(
+    {
+      get(actionKey: string): ActionPlugin<unknown, unknown> | null {
+        return registry[actionKey] || null;
+      },
+    },
+    {
+      async check(step: WorkflowStep, context: ActionContext, preview: unknown): Promise<boolean> {
+        void context;
+        return approve(step, preview);
+      },
+    },
+  );
+
+  const result = await runtime.runWorkflow(spec, wrappedContext);
+
+  if (onStepComplete) {
+    for (const stepRun of result.stepRuns) {
+      if (stepRun.status === 'completed') {
+        onStepComplete(stepRun);
       }
     }
   }
 
-  if (run.status === 'failed') {
-    run.status = 'rolled-back';
-    emit({
-      type: 'workflow.rolled-back',
-      workflowRunId: run.id,
-      actorId: ctx.userId,
-    });
-  }
+  return result;
 }

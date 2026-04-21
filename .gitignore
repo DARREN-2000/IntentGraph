@@ -7,34 +7,75 @@ node_modules/
 dist/
 build/
 out/
+target/
+.next/
+apps/web/.next/
 *.tsbuildinfo
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
+
+# Logs
+*.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-logs/
-*.log
+# Environment variables
+.env
+.env.local
+*.env.*
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Compiled files
+*.class
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
+# Package managers
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
 
-# Test coverage
-coverage/
-.nyc_output/
+# Testing
+.mypy_cache/
+.pytest_cache/
+.jest/
 
 # Turbo
 .turbo/
@@ -53,5 +94,13 @@ infra/terraform/.terraform.lock.hcl
 infra/helm/intentgraph/charts/*.tgz
 
 # Misc
+logs/
 tmp/
 .cache/
+
+# Generated web source artifacts
+apps/web/src/**/*.d.ts
+apps/web/src/**/*.d.ts.map
+apps/web/src/**/*.jsx
+apps/web/src/**/*.jsx.map
+apps/web/src/**/*.js.map

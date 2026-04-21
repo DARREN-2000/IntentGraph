@@ -2,11 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": ".",
-    "baseUrl": ".",
-    "paths": {
-      "@intentgraph/workflow-spec": ["../workflow-spec/src/index"]
-    }
+    "rootDir": "."
   },
   "include": ["src", "__tests__"],
   "exclude": ["dist", "node_modules"]

@@ -12,12 +12,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@intentgraph/workflow-spec": "0.1.0",
-    "@intentgraph/action-sdk": "0.1.0",
-    "@intentgraph/policy": "0.1.0",
-    "@intentgraph/shared": "0.1.0"
+    "@intentgraph/approvals-service": "*",
+    "@intentgraph/audit-service": "*",
+    "@intentgraph/executor-service": "*",
+    "@intentgraph/memory-service": "*",
+    "@intentgraph/planner-service": "*",
+    "@intentgraph/workflow-spec": "*"
   },
   "devDependencies": {
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.0"
   }
 }

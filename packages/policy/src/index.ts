@@ -163,4 +163,4 @@ export function checkPolicy(
   return result;
 }
 
-export { PolicyRule as Policy };
+export type { PolicyRule as Policy };

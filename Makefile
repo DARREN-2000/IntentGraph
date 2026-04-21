@@ -16,6 +16,12 @@ lint:
 format:
 	npm run format
 
+cli-build:
+	npm run cli:build
+
+cli:
+	npm run cli -- $(ARGS)
+
 clean:
 	npm run clean
 

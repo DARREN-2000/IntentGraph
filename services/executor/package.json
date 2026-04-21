@@ -1,18 +1,24 @@
 {
   "name": "@intentgraph/executor-service",
   "version": "0.1.0",
-  "description": "IntentGraph durable workflow executor",
-  "private": true,
-  "license": "Apache-2.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@intentgraph/workflow-spec": "0.1.0",
-    "@intentgraph/shared": "0.1.0"
+    "@intentgraph/workflow-spec": "*",
+    "@intentgraph/action-sdk": "*",
+    "@intentgraph/approvals-service": "*",
+    "@intentgraph/audit-service": "*",
+    "@intentgraph/memory-service": "*"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "@types/node": "^20.10.0",
+    "typescript": "^5.7.0",
+    "ts-node": "^10.9.2"
   }
 }

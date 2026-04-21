@@ -2,6 +2,8 @@
   "name": "@intentgraph/memory-service",
   "version": "0.1.0",
   "description": "IntentGraph context memory service",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "private": true,
   "license": "Apache-2.0",
   "scripts": {

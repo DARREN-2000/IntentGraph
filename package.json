@@ -1,38 +1,32 @@
 {
   "name": "intentgraph",
   "version": "0.1.0",
-  "private": true,
   "description": "A universal action OS that compiles natural-language intent into trusted workflows",
+  "private": true,
   "license": "Apache-2.0",
   "workspaces": [
-    "packages/*",
     "apps/*",
+    "packages/*",
     "services/*"
   ],
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
-    "test:ci": "turbo run test -- --ci --coverage",
     "lint": "turbo run lint",
-    "lint:fix": "turbo run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "clean": "turbo run clean && rm -rf node_modules",
-    "typecheck": "turbo run typecheck",
-    "docker:build": "docker compose build",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down",
-    "helm:lint": "helm lint infra/helm/intentgraph",
-    "helm:template": "helm template intentgraph infra/helm/intentgraph"
+    "dev": "turbo run dev",
+    "cli": "npm run --workspace @intentgraph/cli cli --",
+    "cli:build": "npm run --workspace @intentgraph/cli build",
+    "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
-    "prettier": "^3.2.0",
-    "turbo": "^2.3.0",
+    "@types/node": "^20.10.0",
+    "prettier": "^3.1.0",
+    "turbo": "^1.11.0",
     "typescript": "^5.7.0"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
-  },
-  "packageManager": "npm@10.8.0"
+    "node": ">=20"
+  }
 }

@@ -2,6 +2,8 @@
   "name": "@intentgraph/audit-service",
   "version": "0.1.0",
   "description": "IntentGraph audit trail service",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "private": true,
   "license": "Apache-2.0",
   "scripts": {

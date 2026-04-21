@@ -8,8 +8,13 @@ export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
  * Categories of side effects an action may produce.
  */
 export type EffectCategory =
+  | 'read'
   | 'read-only'
   | 'write'
+  | 'delete'
+  | 'external-send'
+  | 'financial'
+  | 'authentication'
   | 'external-communication'
   | 'money-movement'
   | 'deletion'
@@ -22,6 +27,8 @@ export type EffectCategory =
 export interface ActionContext {
   /** Authenticated user ID */
   userId: string;
+  /** Session ID */
+  sessionId?: string;
   /** Workspace / tenant scope */
   workspaceId: string;
   /** Correlation ID for the overall request */
@@ -36,6 +43,31 @@ export interface ActionContext {
   orgId?: string;
   /** Optional metadata bag */
   metadata?: Record<string, unknown>;
+
+  /** Optional memory state for actions */
+  memory?: Record<string, unknown>;
+
+  /** Optional approval state snapshot */
+  approvals?: ApprovalState;
+
+  /** Optional audit logger in object form */
+  audit?: AuditLogger;
+}
+
+/**
+ * Optional approval state shared across runtime phases.
+ */
+export interface ApprovalState {
+  required: boolean;
+  granted: boolean;
+  approvers: string[];
+}
+
+/**
+ * Optional logger interface for runtime and services.
+ */
+export interface AuditLogger {
+  log(event: AuditEvent): void | Promise<void>;
 }
 
 /**
@@ -96,8 +128,10 @@ export interface WorkflowStep {
 export interface WorkflowSpec {
   /** Unique workflow ID */
   id: string;
+  /** Alternate workflow name */
+  name?: string;
   /** Human-readable title */
-  title: string;
+  title?: string;
   /** Optional description */
   description?: string;
   /** Ordered list of steps */
@@ -110,6 +144,9 @@ export interface WorkflowSpec {
   tags?: string[];
   /** Version for template evolution */
   version?: string;
+
+  /** Optional update timestamp */
+  updatedAt?: string;
 }
 
 /**
@@ -161,8 +198,14 @@ export interface WorkflowRun {
   id: string;
   /** Reference to the workflow spec */
   workflowId: string;
+  /** Alternate spec ID field */
+  specId?: string;
   /** Current status */
   status: WorkflowRunStatus;
+  /** Current linear step index for simple runtimes */
+  currentStepIndex?: number;
+  /** Map of stepId -> result for simple runtimes */
+  results?: Record<string, ActionResult<unknown>>;
   /** Per-step execution records */
   stepRuns: WorkflowStepRun[];
   /** When the run started */
@@ -178,29 +221,21 @@ export interface WorkflowRun {
  */
 export interface AuditEvent {
   /** Unique event ID */
-  id: string;
+  id?: string;
   /** ISO-8601 timestamp */
   timestamp: string;
   /** Event type */
-  type:
-    | 'workflow.started'
-    | 'step.preview'
-    | 'step.approval.requested'
-    | 'step.approval.granted'
-    | 'step.approval.denied'
-    | 'step.executed'
-    | 'step.failed'
-    | 'step.compensated'
-    | 'workflow.completed'
-    | 'workflow.failed'
-    | 'workflow.rolled-back';
+  type: string;
   /** Correlation IDs */
-  workflowRunId: string;
+  workflowRunId?: string;
+  workflowId?: string;
   stepId?: string;
   /** Actor who caused the event */
-  actorId: string;
+  actorId?: string;
+  sessionId?: string;
+  userId?: string;
   /** Event-specific data */
-  data?: unknown;
+  data?: Record<string, unknown> | unknown;
 }
 
 /**
