@@ -188,7 +188,12 @@ class DemoControlPlane {
       return;
     }
 
-    this.workflowStatuses.set(workflowId, 'failed');
+    if (status === 'failed') {
+      this.workflowStatuses.set(workflowId, 'failed');
+      return;
+    }
+
+    this.workflowStatuses.set(workflowId, 'running');
   }
 }
 
