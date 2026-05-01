@@ -5,6 +5,7 @@ import { callDemoControlPlane } from './demo-control-plane';
 const DEFAULT_CONTROL_PLANE_URL = 'http://127.0.0.1:3001';
 const CONTROL_PLANE_TIMEOUT_MS = 10_000;
 const DEMO_MODE_VALUES = new Set(['1', 'true', 'yes']);
+let demoFallbackWarned = false;
 
 interface CallControlPlaneOptions {
   req: NextApiRequest;
@@ -75,6 +76,7 @@ export async function callControlPlane(
     };
   } catch (error) {
     if (shouldFallbackToDemo()) {
+      warnDemoFallback();
       return callDemoControlPlane({
         method: options.method,
         path: options.path,
@@ -99,6 +101,14 @@ function isDemoModeEnabled(): boolean {
 
 function shouldFallbackToDemo(): boolean {
   return process.env.NODE_ENV !== 'production';
+}
+
+function warnDemoFallback(): void {
+  if (demoFallbackWarned) {
+    return;
+  }
+  demoFallbackWarned = true;
+  console.warn('Control plane unreachable; falling back to demo mode.');
 }
 
 function getControlPlaneBaseUrl(): string {

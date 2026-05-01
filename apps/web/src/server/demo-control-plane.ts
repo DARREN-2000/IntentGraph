@@ -102,7 +102,7 @@ class DemoControlPlane {
     if (!workflow) {
       return {
         status: 'failed',
-        runId: `run_missing_${Date.now()}`,
+        runId: `run_missing_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         error: `Workflow not found: ${workflowId}`,
       };
     }
@@ -111,7 +111,7 @@ class DemoControlPlane {
       workflow,
       userId,
       workspaceId: DEMO_WORKSPACE_ID,
-      sessionId: `demo_${Date.now()}`,
+      sessionId: `demo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     });
 
     this.updateWorkflowStatus(workflowId, response.status);
