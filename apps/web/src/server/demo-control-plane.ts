@@ -210,6 +210,24 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+function extractWorkflowId(body?: Record<string, unknown>): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  const direct = asString(body.workflowId);
+  if (direct) {
+    return direct;
+  }
+
+  const workflow = body.workflow;
+  if (workflow && typeof workflow === 'object' && !Array.isArray(workflow)) {
+    return asString((workflow as { id?: unknown }).id);
+  }
+
+  return undefined;
+}
+
 export async function callDemoControlPlane(
   options: DemoControlPlaneCall,
 ): Promise<DemoControlPlaneResponse> {
@@ -239,11 +257,7 @@ export async function callDemoControlPlane(
       return { status: 405, body: { success: false, error: 'Method not allowed' } };
     }
 
-    const workflowFromNested =
-      options.body?.workflow && typeof options.body.workflow === 'object'
-        ? asString((options.body.workflow as { id?: unknown }).id)
-        : undefined;
-    const workflowId = workflowFromNested || asString(options.body?.workflowId);
+    const workflowId = extractWorkflowId(options.body);
     const userId = asString(options.body?.userId) || DEMO_USER_ID;
 
     if (!workflowId) {
@@ -251,8 +265,12 @@ export async function callDemoControlPlane(
     }
 
     const execution = await controlPlane.executeWorkflow(workflowId, userId);
-    const status =
-      execution.status === 'failed' ? 400 : execution.status === 'waiting-approval' ? 202 : 200;
+    let status = 200;
+    if (execution.status === 'waiting-approval') {
+      status = 202;
+    } else if (execution.status === 'failed') {
+      status = 400;
+    }
     return { status, body: execution as unknown as Record<string, unknown> };
   }
 
