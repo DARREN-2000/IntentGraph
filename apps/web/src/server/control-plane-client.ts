@@ -1,7 +1,10 @@
 import type { NextApiRequest } from 'next';
 
+import { callDemoControlPlane } from './demo-control-plane';
+
 const DEFAULT_CONTROL_PLANE_URL = 'http://127.0.0.1:3001';
 const CONTROL_PLANE_TIMEOUT_MS = 10_000;
+const DEMO_MODE_VALUES = new Set(['1', 'true', 'yes']);
 
 interface CallControlPlaneOptions {
   req: NextApiRequest;
@@ -19,6 +22,14 @@ export interface ControlPlaneResponse {
 export async function callControlPlane(
   options: CallControlPlaneOptions,
 ): Promise<ControlPlaneResponse> {
+  if (isDemoModeEnabled()) {
+    return callDemoControlPlane({
+      method: options.method,
+      path: options.path,
+      body: options.body,
+    });
+  }
+
   const baseUrl = getControlPlaneBaseUrl();
   const url = `${baseUrl}${options.path}`;
 
@@ -63,11 +74,31 @@ export async function callControlPlane(
       body: parsed,
     };
   } catch (error) {
+    if (shouldFallbackToDemo()) {
+      return callDemoControlPlane({
+        method: options.method,
+        path: options.path,
+        body: options.body,
+      });
+    }
+
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Control plane request failed: ${message}`);
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function isDemoModeEnabled(): boolean {
+  const value = process.env.INTENTGRAPH_DEMO_MODE;
+  if (!value) {
+    return false;
+  }
+  return DEMO_MODE_VALUES.has(value.toLowerCase());
+}
+
+function shouldFallbackToDemo(): boolean {
+  return process.env.NODE_ENV !== 'production';
 }
 
 function getControlPlaneBaseUrl(): string {

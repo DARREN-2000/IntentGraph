@@ -128,6 +128,18 @@ npm run dev
 
 By default the dashboard is available on `http://localhost:3000`.
 
+### Demo mode (web-only)
+
+For a self-contained live demo (no control plane required), run the dashboard in demo mode:
+
+```bash
+cd apps/web
+INTENTGRAPH_DEMO_MODE=1 npm run dev
+```
+
+Demo mode uses an in-memory control plane and seeds sample workflows and approvals. To point the
+dashboard at a live control plane, set `INTENTGRAPH_CONTROL_PLANE_URL` to your API base URL.
+
 ### 6) Health checks
 
 ```bash
