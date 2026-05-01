@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type { WorkflowRun, WorkflowSpec } from '@intentgraph/workflow-spec';
 import {
   createPlannerService,
@@ -102,7 +104,7 @@ class DemoControlPlane {
     if (!workflow) {
       return {
         status: 'failed',
-        runId: `run_missing_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        runId: createDemoId('run_missing'),
         error: `Workflow not found: ${workflowId}`,
       };
     }
@@ -111,7 +113,7 @@ class DemoControlPlane {
       workflow,
       userId,
       workspaceId: DEMO_WORKSPACE_ID,
-      sessionId: `demo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      sessionId: createDemoId('demo'),
     });
 
     this.updateWorkflowStatus(workflowId, response.status);
@@ -208,6 +210,10 @@ function getDemoControlPlane(): DemoControlPlane {
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
+}
+
+function createDemoId(prefix: string): string {
+  return `${prefix}_${randomUUID()}`;
 }
 
 function extractWorkflowId(body?: Record<string, unknown>): string | undefined {
