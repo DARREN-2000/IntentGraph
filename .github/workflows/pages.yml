@@ -37,8 +37,20 @@ jobs:
       - name: Build workspace (packages + apps)
         run: npm run build
 
-      - name: Export web
-        run: npm run --workspace @intentgraph/web export
+      - name: Prepare export dir
+        run: |
+          set -e
+          # Next 14 uses `output: export` in next.config.js — build writes to .next/output/export
+          export_dir="apps/web/.next/output/export"
+          if [ -d "$export_dir" ]; then
+            rm -rf apps/web/out
+            mkdir -p apps/web/out
+            cp -r "$export_dir"/* apps/web/out/
+          else
+            echo "Export directory not found: $export_dir"
+            ls -la apps/web/.next || true
+            exit 1
+          fi
 
       - name: Disable Jekyll
         run: touch apps/web/out/.nojekyll

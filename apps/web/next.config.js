@@ -8,6 +8,7 @@ const repoName = process.env.GITHUB_REPOSITORY
 const basePath = isGithubPages && repoName ? `/${repoName}` : undefined;
 
 const nextConfig = {
+  output: 'export',
   transpilePackages: [
     '@intentgraph/workflow-spec',
     '@intentgraph/action-sdk',
