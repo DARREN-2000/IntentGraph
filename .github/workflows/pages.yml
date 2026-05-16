@@ -34,8 +34,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Build web
-        run: npm run --workspace @intentgraph/web build
+      - name: Build workspace (packages + apps)
+        run: npm run build
 
       - name: Export web
         run: npm run --workspace @intentgraph/web export
