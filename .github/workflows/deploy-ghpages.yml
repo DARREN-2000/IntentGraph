@@ -33,12 +33,12 @@ jobs:
       - name: Build workspace (packages + apps)
         run: npm run build
 
-      - name: Export web (attempt)
+      - name: Build web explicitly
         run: |
           set -e
+          # Ensure Next builds the static export output in the web package
           cd apps/web
-          # Use the package export script; allow failure here because build may produce different export dirs
-          GITHUB_PAGES=true NEXT_PUBLIC_DEMO_MODE=true NEXT_PUBLIC_DEPLOY_ENV=github-pages npm run export || true
+          GITHUB_PAGES=true NEXT_PUBLIC_DEMO_MODE=true NEXT_PUBLIC_DEPLOY_ENV=github-pages npm run build
 
       - name: Prepare export dir
         run: |
