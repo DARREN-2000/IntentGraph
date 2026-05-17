@@ -45,12 +45,17 @@ jobs:
           found=0
           for export_dir in "${candidates[@]}"; do
             if [ -d "$export_dir" ]; then
-              rm -rf apps/web/out
-              mkdir -p apps/web/out
-              cp -r "$export_dir"/* apps/web/out/
-              found=1
-              echo "Copied export from $export_dir"
-              break
+              # Only copy if the directory contains files
+              if [ "$(ls -A "$export_dir" 2>/dev/null)" ]; then
+                rm -rf apps/web/out
+                mkdir -p apps/web/out
+                cp -r "$export_dir"/* apps/web/out/
+                found=1
+                echo "Copied export from $export_dir"
+                break
+              else
+                echo "Found $export_dir but it is empty; skipping"
+              fi
             fi
           done
           if [ "$found" -ne 1 ]; then
