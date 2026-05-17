@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAGES: true
-      NEXT_PUBLIC_DEMO_MODE: false
+      NEXT_PUBLIC_DEMO_MODE: true
       NEXT_PUBLIC_DEPLOY_ENV: github-pages
     steps:
       - uses: actions/checkout@v4
@@ -37,32 +37,35 @@ jobs:
       - name: Build workspace (packages + apps)
         run: npm run build
 
-      - name: Prepare export dir
+      - name: Assemble export dir
         run: |
-          set -e
-          # Try multiple possible Next export locations (compat with different Next versions/configs)
-          candidates=("apps/web/.next/output/export" "apps/web/.next/export" "apps/web/out")
-          found=0
-          for export_dir in "${candidates[@]}"; do
-            if [ -d "$export_dir" ]; then
-              # Only copy if the directory contains files
-              if [ "$(ls -A "$export_dir" 2>/dev/null)" ]; then
-                rm -rf apps/web/out
-                mkdir -p apps/web/out
-                cp -r "$export_dir"/* apps/web/out/
-                found=1
-                echo "Copied export from $export_dir"
-                break
-              else
-                echo "Found $export_dir but it is empty; skipping"
-              fi
-            fi
-          done
-          if [ "$found" -ne 1 ]; then
-            echo "Export directory not found in any candidate locations"
+          set -euo pipefail
+          rm -rf apps/web/out
+          mkdir -p apps/web/out
+
+          if [ -d "apps/web/.next/server/pages" ]; then
+            echo "Copying prerendered pages from .next/server/pages"
+            rsync -a --prune-empty-dirs --include '*/' --include '*.html' --exclude '*' apps/web/.next/server/pages/ apps/web/out/
+          else
+            echo "Missing apps/web/.next/server/pages"
             ls -la apps/web/.next || true
             exit 1
           fi
+
+          if [ -d "apps/web/.next/static" ]; then
+            echo "Copying static assets from .next/static"
+            mkdir -p apps/web/out/_next
+            cp -r apps/web/.next/static apps/web/out/_next/
+          else
+            echo "Missing apps/web/.next/static"
+            ls -la apps/web/.next || true
+            exit 1
+          fi
+
+      - name: Debug export dir
+        run: |
+          echo "Listing apps/web/out"
+          find apps/web/out -maxdepth 3 -type f | sed -n '1,200p'
 
       - name: Disable Jekyll
         run: touch apps/web/out/.nojekyll
