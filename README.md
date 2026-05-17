@@ -5,7 +5,15 @@
   <p>
     <a href="https://DARREN-2000.github.io/IntentGraph/">Live demo</a> |
     <a href="https://github.com/DARREN-2000/IntentGraph/blob/main/docs/architecture/overview.md">Architecture</a> |
-    <a href="https://github.com/DARREN-2000/IntentGraph/blob/main/docs/runbooks/local-development.md">Runbook</a>
+    <a href="https://github.com/DARREN-2000/IntentGraph/blob/main/docs/runbooks/local-development.md">Runbook</a> |
+    <a href="https://github.com/DARREN-2000/IntentGraph/tree/main/docs/animations">Animations</a> |
+    <a href="https://github.com/DARREN-2000/IntentGraph/tree/main/docs/screenshots">Screenshots</a>
+  </p>
+
+  <p>
+    <img alt="CI status" src="https://github.com/DARREN-2000/IntentGraph/actions/workflows/ci.yml/badge.svg" />
+    <img alt="Pages status" src="https://github.com/DARREN-2000/IntentGraph/actions/workflows/deploy-ghpages.yml/badge.svg" />
+    <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" />
   </p>
 </div>
 
@@ -170,7 +178,7 @@ curl http://localhost:3001/api/v1/version
 
 ## GitHub Pages Demo
 
-The web UI deploys as a static demo to GitHub Pages via the workflow in `.github/workflows/pages.yml`.
+The web UI deploys as a static demo to GitHub Pages via the workflow in `.github/workflows/deploy-ghpages.yml`.
 
 - Demo URL: `https://DARREN-2000.github.io/IntentGraph/`
 - Demo mode is enabled via `NEXT_PUBLIC_DEMO_MODE=true` and `NEXT_PUBLIC_DEPLOY_ENV=github-pages`.
@@ -182,6 +190,12 @@ cd apps/web
 GITHUB_PAGES=true NEXT_PUBLIC_DEMO_MODE=true NEXT_PUBLIC_DEPLOY_ENV=github-pages npm run build
 GITHUB_PAGES=true NEXT_PUBLIC_DEMO_MODE=true NEXT_PUBLIC_DEPLOY_ENV=github-pages npm run export
 ```
+
+Related links:
+
+- Workflow file: `.github/workflows/deploy-ghpages.yml`
+- Web app source: `apps/web`
+- Animations folder: `docs/animations`
 
 ## Web Dashboard
 
@@ -219,7 +233,6 @@ API handlers used by the dashboard:
 
 ### Demo Video
 
-- [IntentGraph dashboard demo (WebM)](docs/videos/intentgraph-dashboard-demo.webm)
 
 ### Regenerate Media Artifacts
 
@@ -229,8 +242,42 @@ node docs/scripts/capture-dashboard-demo.mjs
 
 Artifacts are written to:
 
-- `docs/screenshots/`
-- `docs/videos/`
+
+### Update Media for New UI
+
+To capture fresh screenshots and video after UI changes:
+
+1. Start the full stack:
+  ```bash
+  docker-compose up -d
+  sleep 10
+  ```
+
+2. In another terminal, start the web dashboard in demo mode:
+  ```bash
+  cd apps/web
+  NEXT_PUBLIC_DEMO_MODE=true npm run dev &
+  sleep 5
+  ```
+
+3. Run the media capture script:
+  ```bash
+  node docs/scripts/capture-media-ci.mjs
+  ```
+
+4. Verify artifacts were updated:
+  ```bash
+  ls -la docs/screenshots/ docs/videos/
+  ```
+
+5. Commit and push:
+  ```bash
+  git add docs/screenshots/ docs/videos/
+  git commit -m "chore: update demo media for new UI"
+  git push origin main
+  ```
+
+The GitHub Pages deployment will automatically publish updated media within minutes.
 
 ## Build, Test, and Quality Gates
 
@@ -264,12 +311,55 @@ make cli ARGS="help"
 - `.github/workflows/release.yml`
 - `.github/workflows/pages.yml`
 
+Note: the GitHub Pages deployment workflow is `.github/workflows/deploy-ghpages.yml` (see above).
+
 ## Deployment Paths
 
 ### GitHub Pages (static demo)
 
 - Workflow: `.github/workflows/pages.yml`
 - Output: `apps/web/out`
+
+Note: the working workflow file is `.github/workflows/deploy-ghpages.yml`. If the demo is not reachable, follow the troubleshooting steps below.
+
+GitHub Pages troubleshooting
+
+- Confirm the `gh-pages` branch exists and the action pushed a commit. Run locally:
+
+```bash
+git fetch origin
+git branch -r | grep gh-pages || echo "gh-pages branch not present remotely"
+```
+
+- Check Actions run for `deploy-ghpages.yml` in the repo Actions tab and inspect the `Assemble export` and `Deploy to gh-pages` steps.
+
+- Verify Pages site configuration in the repository Settings → Pages: ensure Source is `gh-pages` branch, root, and that there are no organization-level restrictions.
+
+- Confirm site files include the repo base path if `basePath` is set (URL will be `https://<owner>.github.io/<repo>/`).
+
+- From your machine, test the index and assets:
+
+```bash
+curl -I https://DARREN-2000.github.io/IntentGraph/ | head -n 10
+curl -s https://DARREN-2000.github.io/IntentGraph/_next/static/ | head -n 10 || true
+```
+
+- If the site returns 404, open the Pages settings and re-select the `gh-pages` branch to trigger a refresh, or re-run the deploy workflow.
+
+Senior-developer production checklist
+
+- [ ] End-to-end tests for critical flows (planner → executor → audit)
+- [ ] Integration tests for connectors with mocks and recorded fixtures
+- [ ] Idempotency keys for all write operations
+- [ ] Typed schemas validating all LLM outputs and action inputs
+- [ ] Policy tests and approval gating for risky actions
+- [ ] Audit event integrity checks and retention policy
+- [ ] Secrets and credentials stored in GitHub Secrets (no in-repo keys)
+- [ ] Branch protections and required CI checks before merge
+- [ ] Security review: dependency scanning, Snyk/OSS policy, and static analysis
+- [ ] Performance budget for the web app export (asset size and caching)
+
+If you'd like, I can open the Actions run logs and check whether the workflow produced `apps/web/out` and pushed to `gh-pages` for the failing run.
 
 ### Docker Compose (local integration)
 
