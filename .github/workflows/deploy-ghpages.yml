@@ -42,7 +42,7 @@ jobs:
 
       - name: Prepare export dir
         run: |
-          set -e
+          set -euo pipefail
           candidates=("apps/web/.next/output/export" "apps/web/.next/export" "apps/web/out")
           found=0
           for export_dir in "${candidates[@]}"; do
@@ -55,10 +55,36 @@ jobs:
               break
             fi
           done
+
           if [ "$found" -ne 1 ]; then
-            echo "Export directory not found in any candidate locations"
-            ls -la apps/web/.next || true
-            exit 1
+            # If Next didn't produce a formal export, try to assemble a static site from .next
+            if [ -d "apps/web/.next/server/pages" ]; then
+              echo "No formal export found; assembling static output from .next/server/pages and .next/static"
+              rm -rf apps/web/out
+              mkdir -p apps/web/out
+
+              # Copy HTML pages preserving directory structure
+              find apps/web/.next/server/pages -type f -name '*.html' | while read -r f; do
+                rel_path="${f#apps/web/.next/server/pages/}"
+                dest="apps/web/out/$rel_path"
+                mkdir -p "$(dirname "$dest")"
+                cp "$f" "$dest"
+              done
+
+              # Copy _next static assets so HTML can reference them
+              if [ -d "apps/web/.next/static" ]; then
+                mkdir -p apps/web/out/_next
+                cp -r apps/web/.next/static apps/web/out/_next/
+              fi
+
+              # If there are any exported static files under .next/static/media or similar, ensure they're included
+              found=1
+              echo "Assembled export in apps/web/out"
+            else
+              echo "Export directory not found and .next/server/pages missing"
+              ls -la apps/web/.next || true
+              exit 1
+            fi
           fi
 
       - name: Deploy to gh-pages
