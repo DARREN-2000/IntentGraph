@@ -73,41 +73,41 @@ jobs:
             fi
           fi
 
-      - name: Debug: list export contents
+      - name: Debug list export contents
         run: |
           echo "Listing apps/web/out"
           ls -la apps/web/out || echo "apps/web/out does not exist or is empty"
 
       - name: Deploy to gh-pages
-         id: deploy
+        id: deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./apps/web/out
           publish_branch: gh-pages
 
-        - name: Validate deployment
-          run: |
-            set -e
-            echo "Deployment completed with status: ${{ steps.deploy.outcome }}"
-            if [ "${{ steps.deploy.outcome }}" != "success" ]; then
-              echo "⚠ Deployment failed"
-              exit 1
-            fi
-          
-            # Verify export was not empty
-            if [ ! -f "apps/web/out/index.html" ]; then
-              echo "⚠ Export missing index.html"
-              exit 1
-            fi
-          
-            if [ ! -d "apps/web/out/_next" ]; then
-              echo "⚠ Export missing _next assets"
-              exit 1
-            fi
-          
-            echo "✓ Export validated successfully"
-            echo "✓ Static assets present"
-            echo "✓ Deployment to gh-pages successful"
-            echo ""
-            echo "Live demo available at: https://DARREN-2000.github.io/IntentGraph/"
+      - name: Validate deployment
+        run: |
+          set -e
+          echo "Deployment completed with status: ${{ steps.deploy.outcome }}"
+          if [ "${{ steps.deploy.outcome }}" != "success" ]; then
+            echo "⚠ Deployment failed"
+            exit 1
+          fi
+
+          # Verify export was not empty
+          if [ ! -f "apps/web/out/index.html" ]; then
+            echo "⚠ Export missing index.html"
+            exit 1
+          fi
+
+          if [ ! -d "apps/web/out/_next" ]; then
+            echo "⚠ Export missing _next assets"
+            exit 1
+          fi
+
+          echo "✓ Export validated successfully"
+          echo "✓ Static assets present"
+          echo "✓ Deployment to gh-pages successful"
+          echo ""
+          echo "Live demo available at: https://DARREN-2000.github.io/IntentGraph/"

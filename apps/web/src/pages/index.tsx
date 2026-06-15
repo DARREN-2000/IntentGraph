@@ -955,6 +955,7 @@ export default function Dashboard() {
             {demoMode ? 'Demo mode' : 'Live environment'}
           </span>
         </div>
+        <img src={`${process.env.NEXT_PUBLIC_DEPLOY_ENV === 'github-pages' ? '/IntentGraph' : ''}/docs/animations/intentgraph-hero.svg`} className="heroAnimation" alt="Hero Animation" />
         <h1 className="heroTitle">Intent to trusted workflows, end to end.</h1>
         <p className="heroCopy">
           Transform natural-language goals into policy-checked workflows with preview-first execution,
@@ -1613,6 +1614,14 @@ export default function Dashboard() {
           min-height: 100vh;
           padding: 30px 22px 60px;
           overflow: hidden;
+        }
+
+        .heroAnimation {
+          max-width: 100%;
+          height: auto;
+          margin: 20px auto;
+          display: block;
+          border-radius: 12px;
         }
 
         .heroGlow {
