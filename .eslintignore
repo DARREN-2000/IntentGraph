@@ -1,7 +1,0 @@
-node_modules
-dist
-out
-.next
-apps/web/out
-coverage
-docs/animations
