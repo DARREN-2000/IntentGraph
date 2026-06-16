@@ -75,33 +75,21 @@ export class AuditService {
 	}
 
 	async query(query: AuditQuery): Promise<AuditQueryResult> {
-		let filtered = [...this.events];
-
-		if (query.userId) {
-			filtered = filtered.filter((e) => e.userId === query.userId);
-		}
-		if (query.sessionId) {
-			filtered = filtered.filter((e) => e.sessionId === query.sessionId);
-		}
-		if (query.workflowId) {
-			filtered = filtered.filter(
-				(e) => e.workflowId === query.workflowId || e.workflowRunId === query.workflowId,
-			);
-		}
-		if (query.stepId) {
-			filtered = filtered.filter((e) => e.stepId === query.stepId);
-		}
-		if (query.eventType) {
-			filtered = filtered.filter((e) => e.type === query.eventType);
-		}
-		const startTime = query.startTime;
-		if (startTime) {
-			filtered = filtered.filter((e) => e.timestamp >= startTime);
-		}
-		const endTime = query.endTime;
-		if (endTime) {
-			filtered = filtered.filter((e) => e.timestamp <= endTime);
-		}
+		const filtered = this.events.filter((e) => {
+			if (query.userId && e.userId !== query.userId) return false;
+			if (query.sessionId && e.sessionId !== query.sessionId) return false;
+			if (
+				query.workflowId &&
+				e.workflowId !== query.workflowId &&
+				e.workflowRunId !== query.workflowId
+			)
+				return false;
+			if (query.stepId && e.stepId !== query.stepId) return false;
+			if (query.eventType && e.type !== query.eventType) return false;
+			if (query.startTime && e.timestamp < query.startTime) return false;
+			if (query.endTime && e.timestamp > query.endTime) return false;
+			return true;
+		});
 
 		const total = filtered.length;
 		const offset = query.offset || 0;
