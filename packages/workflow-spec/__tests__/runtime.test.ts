@@ -14,10 +14,7 @@ function makeCtx(overrides: Partial<ActionContext> = {}): ActionContext {
   };
 }
 
-function makePlugin(
-  key: string,
-  overrides: Partial<ActionPlugin> = {},
-): ActionPlugin {
+function makePlugin(key: string, overrides: Partial<ActionPlugin> = {}): ActionPlugin {
   return {
     key,
     risk: 'low',
@@ -40,14 +37,17 @@ describe('runWorkflow', () => {
     const spec: WorkflowSpec = {
       id: 'wf-1',
       title: 'Simple Workflow',
-      steps: [
-        { id: 's1', action: 'test.action', input: { x: 1 }, requiresApproval: false },
-      ],
+      steps: [{ id: 's1', action: 'test.action', input: { x: 1 }, requiresApproval: false }],
     };
 
-    const result = await runWorkflow(spec, makeCtx(), { 'test.action': plugin }, {
-      approve: jest.fn(),
-    });
+    const result = await runWorkflow(
+      spec,
+      makeCtx(),
+      { 'test.action': plugin },
+      {
+        approve: jest.fn(),
+      },
+    );
 
     expect(result.status).toBe('completed');
     expect(result.stepRuns).toHaveLength(1);
@@ -96,9 +96,7 @@ describe('runWorkflow', () => {
     const spec: WorkflowSpec = {
       id: 'wf-3',
       title: 'Approval Workflow',
-      steps: [
-        { id: 's1', action: 'risky.action', input: {}, requiresApproval: true },
-      ],
+      steps: [{ id: 's1', action: 'risky.action', input: {}, requiresApproval: true }],
     };
 
     const approve = jest.fn().mockResolvedValue(true);
@@ -113,9 +111,7 @@ describe('runWorkflow', () => {
     const spec: WorkflowSpec = {
       id: 'wf-4',
       title: 'Denied Workflow',
-      steps: [
-        { id: 's1', action: 'risky.action', input: {}, requiresApproval: true },
-      ],
+      steps: [{ id: 's1', action: 'risky.action', input: {}, requiresApproval: true }],
     };
 
     const approve = jest.fn().mockResolvedValue(false);
@@ -155,9 +151,7 @@ describe('runWorkflow', () => {
     const spec: WorkflowSpec = {
       id: 'wf-6',
       title: 'Missing Plugin',
-      steps: [
-        { id: 's1', action: 'nonexistent', input: {}, requiresApproval: false },
-      ],
+      steps: [{ id: 's1', action: 'nonexistent', input: {}, requiresApproval: false }],
     };
 
     const result = await runWorkflow(spec, makeCtx(), {}, { approve: jest.fn() });
@@ -171,9 +165,7 @@ describe('runWorkflow', () => {
     const spec: WorkflowSpec = {
       id: 'wf-7',
       title: 'Audit Workflow',
-      steps: [
-        { id: 's1', action: 'audited.action', input: {}, requiresApproval: false },
-      ],
+      steps: [{ id: 's1', action: 'audited.action', input: {}, requiresApproval: false }],
     };
 
     const events: Array<Omit<AuditEvent, 'id' | 'timestamp'>> = [];
@@ -228,9 +220,7 @@ describe('runWorkflow', () => {
     const spec: WorkflowSpec = {
       id: 'wf-9',
       title: 'Callback Workflow',
-      steps: [
-        { id: 's1', action: 'callback.action', input: {}, requiresApproval: false },
-      ],
+      steps: [{ id: 's1', action: 'callback.action', input: {}, requiresApproval: false }],
     };
 
     const completedSteps: string[] = [];

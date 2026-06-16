@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isGithubPages =
-  process.env.GITHUB_PAGES === 'true' ||
-  process.env.NEXT_PUBLIC_DEPLOY_ENV === 'github-pages';
+  process.env.GITHUB_PAGES === 'true' || process.env.NEXT_PUBLIC_DEPLOY_ENV === 'github-pages';
 const repoName = process.env.GITHUB_REPOSITORY
   ? process.env.GITHUB_REPOSITORY.split('/')[1]
   : undefined;

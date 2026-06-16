@@ -112,12 +112,7 @@ export function createGitHubActions(client: MockGitHubClient): GitHubActions {
     },
 
     async execute(_ctx, input) {
-      const branch = client.createBranch(
-        input.owner,
-        input.repo,
-        input.branchName,
-        input.baseSha,
-      );
+      const branch = client.createBranch(input.owner, input.repo, input.branchName, input.baseSha);
       return {
         ok: true,
         summary: `Created branch "${input.branchName}" (${branch.sha}).`,

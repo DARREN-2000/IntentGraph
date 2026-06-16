@@ -4,9 +4,7 @@ import { randomUUID } from 'crypto';
 /**
  * Create a mock ActionContext for testing action plugins.
  */
-export function createMockContext(
-  overrides: Partial<ActionContext> = {},
-): ActionContext {
+export function createMockContext(overrides: Partial<ActionContext> = {}): ActionContext {
   return {
     userId: 'test-user',
     workspaceId: 'test-workspace',

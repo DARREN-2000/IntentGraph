@@ -14,10 +14,7 @@ interface ApproveBody {
   approverId?: string;
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-): Promise<void> {
+export default async function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
   const requestId = getRequestId(req);
 
   if (!assertMethod(req, res, 'POST', requestId)) {

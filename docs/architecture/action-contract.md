@@ -66,10 +66,10 @@ defined in `packages/workflow-spec/src/runtime.ts`:
 
 ```typescript
 export interface ActionPlugin<I = unknown, O = unknown> {
-  key: string;                    // e.g. "github.create_branch"
-  risk: RiskLevel;                // "low" | "medium" | "high" | "critical"
-  effects: EffectCategory[];      // what kind of side effects
-  description: string;            // human-readable description
+  key: string; // e.g. "github.create_branch"
+  risk: RiskLevel; // "low" | "medium" | "high" | "critical"
+  effects: EffectCategory[]; // what kind of side effects
+  description: string; // human-readable description
 
   preview(ctx: ActionContext, input: I): Promise<ActionResult<O>>;
   execute(ctx: ActionContext, input: I): Promise<ActionResult<O>>;
@@ -128,8 +128,8 @@ succeeds, it returns an `ActionResult` with a `compensation` field:
 
 ```typescript
 export interface Compensation {
-  action: string;     // the action key to invoke for rollback
-  payload: unknown;   // opaque data the compensating action needs
+  action: string; // the action key to invoke for rollback
+  payload: unknown; // opaque data the compensating action needs
 }
 ```
 
@@ -369,15 +369,15 @@ effects: EffectCategory[];    // what kind of side effects
 
 The seven effect categories defined in `packages/workflow-spec/src/types.ts`:
 
-| Category                  | Description                          | Example                    |
-|---------------------------|--------------------------------------|----------------------------|
-| `read-only`               | No side effects                      | Fetching an issue          |
-| `write`                   | Creates or modifies a resource       | Creating a branch          |
-| `external-communication`  | Sends messages to external parties   | Sending an email, opening a PR |
-| `money-movement`          | Transfers or charges money           | Processing a payment       |
-| `deletion`                | Permanently removes a resource       | Deleting a repository      |
-| `access-change`           | Modifies permissions or credentials  | Granting admin access      |
-| `provisioning`            | Creates infrastructure or accounts   | Spinning up a server       |
+| Category                 | Description                         | Example                        |
+| ------------------------ | ----------------------------------- | ------------------------------ |
+| `read-only`              | No side effects                     | Fetching an issue              |
+| `write`                  | Creates or modifies a resource      | Creating a branch              |
+| `external-communication` | Sends messages to external parties  | Sending an email, opening a PR |
+| `money-movement`         | Transfers or charges money          | Processing a payment           |
+| `deletion`               | Permanently removes a resource      | Deleting a repository          |
+| `access-change`          | Modifies permissions or credentials | Granting admin access          |
+| `provisioning`           | Creates infrastructure or accounts  | Spinning up a server           |
 
 ### Policy Engine
 
@@ -390,26 +390,26 @@ configurable rules. Each `PolicyRule` specifies:
 
 The 8 default rules:
 
-| Rule ID                  | Effects                                         | Min Risk   | Action            |
-|--------------------------|------------------------------------------------|------------|--------------------|
-| `block-critical-auto`    | deletion, money, access-change, provisioning    | critical   | block              |
-| `approve-high-write`     | write, external-comms, deletion, money          | high       | require-approval   |
-| `approve-money`          | money-movement                                  | low        | require-approval   |
-| `approve-deletion`       | deletion                                        | low        | require-approval   |
-| `approve-access-change`  | access-change                                   | low        | require-approval   |
-| `approve-external-comms` | external-communication                          | medium     | require-approval   |
-| `warn-provisioning`      | provisioning                                    | low        | warn               |
-| `allow-read-only`        | read-only                                       | low        | allow              |
+| Rule ID                  | Effects                                      | Min Risk | Action           |
+| ------------------------ | -------------------------------------------- | -------- | ---------------- |
+| `block-critical-auto`    | deletion, money, access-change, provisioning | critical | block            |
+| `approve-high-write`     | write, external-comms, deletion, money       | high     | require-approval |
+| `approve-money`          | money-movement                               | low      | require-approval |
+| `approve-deletion`       | deletion                                     | low      | require-approval |
+| `approve-access-change`  | access-change                                | low      | require-approval |
+| `approve-external-comms` | external-communication                       | medium   | require-approval |
+| `warn-provisioning`      | provisioning                                 | low      | warn             |
+| `allow-read-only`        | read-only                                    | low      | allow            |
 
 The `checkPolicy()` function returns a `PolicyCheckResult`:
 
 ```typescript
 export interface PolicyCheckResult {
-  allowed: boolean;           // false if any rule blocks
-  requiresApproval: boolean;  // true if any rule requires approval
+  allowed: boolean; // false if any rule blocks
+  requiresApproval: boolean; // true if any rule requires approval
   matchedRules: PolicyRule[]; // which rules matched
-  warnings: string[];         // warning messages
-  blockReasons: string[];     // why the step was blocked
+  warnings: string[]; // warning messages
+  blockReasons: string[]; // why the step was blocked
 }
 ```
 
@@ -424,6 +424,7 @@ export interface PolicyCheckResult {
 5. **Audit trail** records the policy decision for compliance.
 
 This separation ensures that:
+
 - Plugin authors cannot bypass approval requirements.
 - Policy rules are configurable per tenant without changing plugin code.
 - The runtime enforces policy uniformly across all actions.
@@ -454,26 +455,26 @@ Each event carries:
 
 ```typescript
 export interface AuditEvent {
-  id: string;               // unique event ID
-  timestamp: string;        // ISO-8601
-  type: AuditEventType;     // one of the 11 types above
-  workflowRunId: string;    // correlation ID
-  stepId?: string;          // which step (if step-level event)
-  actorId: string;          // who caused it
-  data?: unknown;           // event-specific payload
+  id: string; // unique event ID
+  timestamp: string; // ISO-8601
+  type: AuditEventType; // one of the 11 types above
+  workflowRunId: string; // correlation ID
+  stepId?: string; // which step (if step-level event)
+  actorId: string; // who caused it
+  data?: unknown; // event-specific payload
 }
 ```
 
 ### What Gets Audited
 
-| Phase        | Events Emitted                                                |
-|-------------|---------------------------------------------------------------|
-| Start       | `workflow.started`                                            |
-| Preview     | `step.preview` (with preview data)                            |
-| Approval    | `step.approval.requested`, then `.granted` or `.denied`       |
-| Execute     | `step.executed` (with output) or `step.failed` (with error)   |
-| Compensate  | `step.compensated` for each rolled-back step                  |
-| End         | `workflow.completed`, `workflow.failed`, or `workflow.rolled-back` |
+| Phase      | Events Emitted                                                     |
+| ---------- | ------------------------------------------------------------------ |
+| Start      | `workflow.started`                                                 |
+| Preview    | `step.preview` (with preview data)                                 |
+| Approval   | `step.approval.requested`, then `.granted` or `.denied`            |
+| Execute    | `step.executed` (with output) or `step.failed` (with error)        |
+| Compensate | `step.compensated` for each rolled-back step                       |
+| End        | `workflow.completed`, `workflow.failed`, or `workflow.rolled-back` |
 
 ### Why This Matters
 

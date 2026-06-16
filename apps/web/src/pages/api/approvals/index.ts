@@ -8,10 +8,7 @@ import {
   sendOk,
 } from '../../../server/api-utils';
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-): void {
+export default function handler(req: NextApiRequest, res: NextApiResponse): void {
   const requestId = getRequestId(req);
 
   if (!assertMethod(req, res, 'GET', requestId)) {

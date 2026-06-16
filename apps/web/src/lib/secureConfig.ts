@@ -11,7 +11,7 @@ async function deriveKey(passphrase: string, salt: Uint8Array) {
     enc.encode(passphrase),
     { name: 'PBKDF2' },
     false,
-    ['deriveKey']
+    ['deriveKey'],
   );
   return crypto.subtle.deriveKey(
     {
@@ -23,7 +23,7 @@ async function deriveKey(passphrase: string, salt: Uint8Array) {
     baseKey,
     { name: 'AES-GCM', length: 256 },
     false,
-    ['encrypt', 'decrypt']
+    ['encrypt', 'decrypt'],
   );
 }
 
@@ -46,7 +46,11 @@ export async function encryptConfig(plaintext: string, passphrase: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(passphrase, salt);
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    enc.encode(plaintext),
+  );
   const payload = {
     v: 1,
     s: toBase64(salt.buffer),

@@ -127,11 +127,7 @@ function getUrl(req: IncomingMessage): URL {
   return new URL(req.url || '/', `http://${host}`);
 }
 
-function methodNotAllowed(
-  res: ServerResponse,
-  requestId: string,
-  allowedMethod: string,
-): void {
+function methodNotAllowed(res: ServerResponse, requestId: string, allowedMethod: string): void {
   res.setHeader('Allow', allowedMethod);
   sendError(res, 405, requestId, 'Method not allowed');
 }
@@ -185,7 +181,12 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       }
 
       const result = await controlPlane.planIntent(userId, intent);
-      sendOk(res, result.success ? 200 : 400, requestId, result as unknown as Record<string, unknown>);
+      sendOk(
+        res,
+        result.success ? 200 : 400,
+        requestId,
+        result as unknown as Record<string, unknown>,
+      );
       return;
     }
 

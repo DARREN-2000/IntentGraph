@@ -125,6 +125,7 @@ When parsing intents:
 **User**: "Create a GitHub issue for the login bug in my-org/my-repo"
 
 **Response**:
+
 ```json
 {
   "action": "github.create_issue",
@@ -145,6 +146,7 @@ When parsing intents:
 **User**: "When a PR is merged, notify the team on Slack and create a release ticket in Jira"
 
 **Response**:
+
 ```json
 {
   "name": "PR Merge Notification",
@@ -177,6 +179,7 @@ When parsing intents:
 **User**: "Delete all old branches from the repository"
 
 **Response**:
+
 ```json
 {
   "action": "github.delete_branches",

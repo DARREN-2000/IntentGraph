@@ -75,11 +75,7 @@ describe('checkPolicy', () => {
   });
 
   it('should preserve existing requiresApproval from step', () => {
-    const result = checkPolicy(
-      makeStep({ requiresApproval: true }),
-      'low',
-      ['read-only'],
-    );
+    const result = checkPolicy(makeStep({ requiresApproval: true }), 'low', ['read-only']);
     expect(result.requiresApproval).toBe(true);
   });
 

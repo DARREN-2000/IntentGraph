@@ -50,6 +50,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Build packages
+        run: npm run build
+
       - name: Run tests
         run: |
           cd packages/workflow-spec && npx jest --ci --coverage

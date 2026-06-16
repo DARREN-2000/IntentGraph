@@ -75,12 +75,7 @@ export interface MockGitHubClient {
   closePullRequest(owner: string, repo: string, prNumber: number): boolean;
 
   /** Close an issue and add a comment. Returns the comment ID or `undefined`. */
-  closeIssue(
-    owner: string,
-    repo: string,
-    issueNumber: number,
-    comment: string,
-  ): number | undefined;
+  closeIssue(owner: string, repo: string, issueNumber: number, comment: string): number | undefined;
 
   /** Reopen a previously closed issue. Returns `true` if the issue existed. */
   reopenIssue(owner: string, repo: string, issueNumber: number): boolean;

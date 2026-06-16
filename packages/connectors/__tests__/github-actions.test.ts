@@ -102,10 +102,7 @@ describe('GitHub connector actions', () => {
       expect(execResult.compensation).toBeDefined();
 
       // Compensate (delete the branch)
-      await actions['github.create_branch'].compensate!(
-        ctx,
-        execResult.compensation!.payload,
-      );
+      await actions['github.create_branch'].compensate!(ctx, execResult.compensation!.payload);
 
       // Verify the branch was deleted by trying to create it again
       const reCreate = await actions['github.create_branch'].execute(ctx, {
@@ -239,10 +236,7 @@ describe('GitHub connector actions', () => {
       expect(execResult.ok).toBe(true);
       expect(client.getIssue('acme', 'webapp', 3)?.state).toBe('closed');
 
-      await actions['github.close_issue'].compensate!(
-        ctx,
-        execResult.compensation!.payload,
-      );
+      await actions['github.close_issue'].compensate!(ctx, execResult.compensation!.payload);
 
       // Issue should be open again
       expect(client.getIssue('acme', 'webapp', 3)?.state).toBe('open');

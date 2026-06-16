@@ -127,10 +127,7 @@ function getFlagBoolean(flags: Map<string, string | boolean>, key: string): bool
   return value === true || value === 'true';
 }
 
-function getFlagString(
-  flags: Map<string, string | boolean>,
-  key: string,
-): string | undefined {
+function getFlagString(flags: Map<string, string | boolean>, key: string): string | undefined {
   const value = flags.get(key);
   return typeof value === 'string' ? value : undefined;
 }
@@ -190,7 +187,9 @@ function printHelp(): void {
   process.stdout.write('  doctor                             Validate local environment\n\n');
   process.stdout.write('Global options:\n');
   process.stdout.write('  --json, -j                         Output machine-readable JSON\n');
-  process.stdout.write('  --user <id>                        Set user id (default: current-user)\n');
+  process.stdout.write(
+    '  --user <id>                        Set user id (default: current-user)\n',
+  );
   process.stdout.write('  --workspace <id>                   Set workspace id\n');
   process.stdout.write('  --no-color                         Disable ANSI colors\n\n');
   process.stdout.write('run options:\n');
@@ -198,7 +197,9 @@ function printHelp(): void {
   process.stdout.write('Examples:\n');
   process.stdout.write('  intentgraph actions list\n');
   process.stdout.write('  intentgraph plan --intent "Create an issue in github repo: my-repo"\n');
-  process.stdout.write('  intentgraph run --intent "Create a pull request in github repo: my-repo" --auto-approve\n');
+  process.stdout.write(
+    '  intentgraph run --intent "Create a pull request in github repo: my-repo" --auto-approve\n',
+  );
   process.stdout.write('  intentgraph doctor --json\n');
 }
 
@@ -223,7 +224,9 @@ function printPlanningResult(result: PlanningResult): void {
   process.stdout.write(`${ok('Workflow planned successfully')}\n`);
   process.stdout.write(`confidence: ${Math.round(result.confidence * 100)}%\n`);
   process.stdout.write(`workflow: ${result.workflow.id}\n`);
-  process.stdout.write(`name: ${result.workflow.name || result.workflow.title || result.workflow.id}\n`);
+  process.stdout.write(
+    `name: ${result.workflow.name || result.workflow.title || result.workflow.id}\n`,
+  );
   process.stdout.write(`steps: ${result.workflow.steps.length}\n`);
 
   if (result.warnings && result.warnings.length > 0) {
@@ -249,7 +252,9 @@ function printExecutionResult(execution: ExecutionResponse): void {
     if (approvals.length > 0) {
       process.stdout.write('pending approvals:\n');
       for (const approval of approvals) {
-        process.stdout.write(`- ${approval.id} (${approval.action}) requested of ${approval.requestedOf}\n`);
+        process.stdout.write(
+          `- ${approval.id} (${approval.action}) requested of ${approval.requestedOf}\n`,
+        );
       }
     }
     return;
@@ -262,10 +267,7 @@ function printExecutionResult(execution: ExecutionResponse): void {
   }
 }
 
-function resolveIntent(
-  flags: Map<string, string | boolean>,
-  positionals: string[],
-): string {
+function resolveIntent(flags: Map<string, string | boolean>, positionals: string[]): string {
   const fromFlag = getFlagString(flags, 'intent');
   if (fromFlag && fromFlag.trim().length > 0) {
     return fromFlag.trim();
@@ -275,10 +277,7 @@ function resolveIntent(
   return joined;
 }
 
-async function commandActions(
-  runtime: RuntimeContext,
-  options: GlobalOptions,
-): Promise<number> {
+async function commandActions(runtime: RuntimeContext, options: GlobalOptions): Promise<number> {
   const actions = runtime.planner.getAvailableActions();
 
   if (options.json) {
@@ -458,14 +457,17 @@ async function commandDoctor(options: GlobalOptions): Promise<number> {
   });
 
   checks.push(await checkUrl('http://127.0.0.1:3001/healthz'));
-  checks.push(await checkUrl('http://127.0.0.1:3000/api/workflows', process.env.INTENTGRAPH_API_TOKEN));
+  checks.push(
+    await checkUrl('http://127.0.0.1:3000/api/workflows', process.env.INTENTGRAPH_API_TOKEN),
+  );
 
   if (options.json) {
     printJson({ checks });
   } else {
     process.stdout.write(`${header('IntentGraph Doctor')}\n\n`);
     for (const check of checks) {
-      const symbol = check.status === 'ok' ? ok('PASS') : check.status === 'warn' ? warn('WARN') : fail('FAIL');
+      const symbol =
+        check.status === 'ok' ? ok('PASS') : check.status === 'warn' ? warn('WARN') : fail('FAIL');
       process.stdout.write(`${symbol} ${check.name}: ${check.details}\n`);
     }
   }

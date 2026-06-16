@@ -60,12 +60,12 @@ Memory is separated to prevent context leakage:
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js, React, Tailwind, shadcn/ui |
-| Control Plane | Node.js API, PostgreSQL, Redis |
-| Agent Plane | LLM APIs, LangGraph |
-| Workflow Plane | Temporal, Event Sourcing |
-| Trust Plane | OpenFGA, Secret Vault |
-| Message Queue | NATS JetStream |
-| Deployment | Docker, Kubernetes, Helm, Terraform |
+| Layer          | Technology                          |
+| -------------- | ----------------------------------- |
+| Frontend       | Next.js, React, Tailwind, shadcn/ui |
+| Control Plane  | Node.js API, PostgreSQL, Redis      |
+| Agent Plane    | LLM APIs, LangGraph                 |
+| Workflow Plane | Temporal, Event Sourcing            |
+| Trust Plane    | OpenFGA, Secret Vault               |
+| Message Queue  | NATS JetStream                      |
+| Deployment     | Docker, Kubernetes, Helm, Terraform |

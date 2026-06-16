@@ -89,6 +89,7 @@ curl http://localhost:3001/api/v1/version
 ## Troubleshooting
 
 ### Tests failing
+
 ```bash
 # Clean and rebuild
 npm run clean
@@ -98,6 +99,7 @@ npm test
 ```
 
 ### Docker build failing
+
 ```bash
 # Check Docker daemon is running
 docker info
@@ -108,6 +110,7 @@ docker compose build --no-cache
 ```
 
 ### Helm template errors
+
 ```bash
 # Debug template rendering
 helm template intentgraph infra/helm/intentgraph --debug

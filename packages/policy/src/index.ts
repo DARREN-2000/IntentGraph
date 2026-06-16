@@ -1,8 +1,4 @@
-import type {
-  EffectCategory,
-  RiskLevel,
-  WorkflowStep,
-} from '@intentgraph/workflow-spec';
+import type { EffectCategory, RiskLevel, WorkflowStep } from '@intentgraph/workflow-spec';
 
 /**
  * A policy rule that determines whether a step requires approval

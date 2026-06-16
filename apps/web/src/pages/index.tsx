@@ -371,12 +371,7 @@ const PRICING_TIERS: PricingTier[] = [
     name: 'Studio',
     price: '$0',
     tagline: 'Single project sandbox',
-    features: [
-      'Local demo mode',
-      'Policy simulation',
-      'Up to 5 workflows',
-      'Community support',
-    ],
+    features: ['Local demo mode', 'Policy simulation', 'Up to 5 workflows', 'Community support'],
     cta: 'Start free',
   },
   {
@@ -396,12 +391,7 @@ const PRICING_TIERS: PricingTier[] = [
     name: 'Enterprise',
     price: 'Custom',
     tagline: 'Security + scale',
-    features: [
-      'SAML + SCIM',
-      'Policy studio',
-      'Dedicated support',
-      'On-prem connectors',
-    ],
+    features: ['SAML + SCIM', 'Policy studio', 'Dedicated support', 'On-prem connectors'],
     cta: 'Talk to sales',
   },
 ];
@@ -531,10 +521,10 @@ const RISKY_KEYWORDS = ['delete', 'spend', 'provision', 'email', 'slack', 'send'
 export default function Dashboard() {
   const demoModeBuild = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
   const [runtimeApiBase, setRuntimeApiBase] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? window.localStorage.getItem('intentgraph_api_base') : null
+    typeof window !== 'undefined' ? window.localStorage.getItem('intentgraph_api_base') : null,
   );
   const [runtimeApiKey, setRuntimeApiKey] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? window.localStorage.getItem('intentgraph_api_key') : null
+    typeof window !== 'undefined' ? window.localStorage.getItem('intentgraph_api_key') : null,
   );
   const [showSettings, setShowSettings] = useState(false);
   const [encryptedPresent, setEncryptedPresent] = useState(false);
@@ -580,7 +570,10 @@ export default function Dashboard() {
         setRuntimeApiKey(null);
         setEncryptedPresent(true);
       } catch (err) {
-        setFeedback({ tone: 'error', text: `Encryption failed: ${err instanceof Error ? err.message : String(err)}` });
+        setFeedback({
+          tone: 'error',
+          text: `Encryption failed: ${err instanceof Error ? err.message : String(err)}`,
+        });
       }
     } else {
       saveRuntimeConfig(runtimeApiBase || null, runtimeApiKey || null);
@@ -603,7 +596,10 @@ export default function Dashboard() {
       setShowSettings(false);
       setFeedback({ tone: 'success', text: 'Configuration unlocked in browser session.' });
     } catch (err) {
-      setFeedback({ tone: 'error', text: `Unlock failed: ${err instanceof Error ? err.message : String(err)}` });
+      setFeedback({
+        tone: 'error',
+        text: `Unlock failed: ${err instanceof Error ? err.message : String(err)}`,
+      });
     }
   };
 
@@ -622,15 +618,15 @@ export default function Dashboard() {
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackMessage | null>(
-    demoMode ? { tone: 'info', text: 'Demo mode is enabled. Live data is simulated.' } : null
+    demoMode ? { tone: 'info', text: 'Demo mode is enabled. Live data is simulated.' } : null,
   );
   const [selectedCategory, setSelectedCategory] = useState<ActionCategory>('All');
   const [activeUseCase, setActiveUseCase] = useState<UseCase>(USE_CASES[0]);
   const [planSummary, setPlanSummary] = useState<PlanSummary | null>(
-    demoMode ? DEMO_PLAN_SUMMARY : null
+    demoMode ? DEMO_PLAN_SUMMARY : null,
   );
   const [confidence, setConfidence] = useState<number | null>(
-    demoMode ? DEMO_PLAN_SUMMARY.confidence : null
+    demoMode ? DEMO_PLAN_SUMMARY.confidence : null,
   );
 
   const visibleActions = useMemo(() => {
@@ -694,7 +690,7 @@ export default function Dashboard() {
         setRefreshing(false);
       }
     },
-    [demoMode]
+    [demoMode],
   );
 
   useEffect(() => {
@@ -722,7 +718,7 @@ export default function Dashboard() {
           title: 'Workflow planned',
           detail: demoPlan.summary.name,
           tone: 'success',
-        })
+        }),
       );
       setFeedback({
         tone: 'success',
@@ -793,14 +789,14 @@ export default function Dashboard() {
         };
         setApprovals((prev) => [approval, ...prev]);
         setWorkflows((prev) =>
-          prev.map((wf) => (wf.id === workflowId ? { ...wf, status: 'waiting-approval' } : wf))
+          prev.map((wf) => (wf.id === workflowId ? { ...wf, status: 'waiting-approval' } : wf)),
         );
         setActivity((prev) =>
           prependActivity(prev, {
             title: 'Approval requested',
             detail: `${target.name} requires approval.`,
             tone: 'warning',
-          })
+          }),
         );
         setFeedback({
           tone: 'info',
@@ -808,14 +804,14 @@ export default function Dashboard() {
         });
       } else {
         setWorkflows((prev) =>
-          prev.map((wf) => (wf.id === workflowId ? { ...wf, status: 'completed' } : wf))
+          prev.map((wf) => (wf.id === workflowId ? { ...wf, status: 'completed' } : wf)),
         );
         setActivity((prev) =>
           prependActivity(prev, {
             title: 'Workflow executed',
             detail: `${target.name} completed successfully.`,
             tone: 'success',
-          })
+          }),
         );
         setFeedback({ tone: 'success', text: 'Workflow executed: completed' });
       }
@@ -872,19 +868,17 @@ export default function Dashboard() {
       }
 
       setApprovals((prev) =>
-        prev.map((item) => (item.id === approvalId ? { ...item, status: 'approved' } : item))
+        prev.map((item) => (item.id === approvalId ? { ...item, status: 'approved' } : item)),
       );
       setWorkflows((prev) =>
-        prev.map((wf) =>
-          wf.id === approval.workflowId ? { ...wf, status: 'completed' } : wf
-        )
+        prev.map((wf) => (wf.id === approval.workflowId ? { ...wf, status: 'completed' } : wf)),
       );
       setActivity((prev) =>
         prependActivity(prev, {
           title: 'Approval granted',
           detail: `${approval.workflowId} released to execute.`,
           tone: 'success',
-        })
+        }),
       );
       setFeedback({
         tone: 'success',
@@ -955,11 +949,15 @@ export default function Dashboard() {
             {demoMode ? 'Demo mode' : 'Live environment'}
           </span>
         </div>
-        <img src={`${process.env.NEXT_PUBLIC_DEPLOY_ENV === 'github-pages' ? '/IntentGraph' : ''}/docs/animations/intentgraph-hero.svg`} className="heroAnimation" alt="Hero Animation" />
+        <img
+          src={`${process.env.NEXT_PUBLIC_DEPLOY_ENV === 'github-pages' ? '/IntentGraph' : ''}/docs/animations/intentgraph-hero.svg`}
+          className="heroAnimation"
+          alt="Hero Animation"
+        />
         <h1 className="heroTitle">Intent to trusted workflows, end to end.</h1>
         <p className="heroCopy">
-          Transform natural-language goals into policy-checked workflows with preview-first execution,
-          human approvals, and audit-ready event trails.
+          Transform natural-language goals into policy-checked workflows with preview-first
+          execution, human approvals, and audit-ready event trails.
         </p>
         <div className="heroActions">
           <button type="button" className="primaryButton" onClick={scrollToStudio}>
@@ -1478,12 +1476,20 @@ export default function Dashboard() {
         <div className="settingsModal" role="dialog" aria-modal="true">
           <div className="settingsCard">
             <h3>Runtime API configuration</h3>
-            <p className="hintText">Provide an external API base URL to connect the static demo to a live control plane. API key will be sent as `x-api-key` header.</p>
+            <p className="hintText">
+              Provide an external API base URL to connect the static demo to a live control plane.
+              API key will be sent as `x-api-key` header.
+            </p>
 
             {encryptedPresent ? (
               <div>
-                <p className="hintText">An encrypted configuration is stored in this browser. Unlock it to use the config for this session.</p>
-                <label htmlFor="unlock-passphrase" className="inputLabel">Passphrase</label>
+                <p className="hintText">
+                  An encrypted configuration is stored in this browser. Unlock it to use the config
+                  for this session.
+                </p>
+                <label htmlFor="unlock-passphrase" className="inputLabel">
+                  Passphrase
+                </label>
                 <input
                   id="unlock-passphrase"
                   type="password"
@@ -1493,21 +1499,31 @@ export default function Dashboard() {
                   className="intentInput"
                 />
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button type="button" className="primaryButton" onClick={() => void handleUnlock()}>
+                  <button
+                    type="button"
+                    className="primaryButton"
+                    onClick={() => void handleUnlock()}
+                  >
                     Unlock
                   </button>
-                  <button type="button" className="ghostButton" onClick={() => {
-                    window.localStorage.removeItem('intentgraph_api_config');
-                    setEncryptedPresent(false);
-                    setShowSettings(false);
-                  }}>
+                  <button
+                    type="button"
+                    className="ghostButton"
+                    onClick={() => {
+                      window.localStorage.removeItem('intentgraph_api_config');
+                      setEncryptedPresent(false);
+                      setShowSettings(false);
+                    }}
+                  >
                     Remove Encrypted Config
                   </button>
                 </div>
               </div>
             ) : (
               <>
-                <label htmlFor="api-base-url" className="inputLabel">API Base URL</label>
+                <label htmlFor="api-base-url" className="inputLabel">
+                  API Base URL
+                </label>
                 <input
                   id="api-base-url"
                   type="text"
@@ -1516,7 +1532,9 @@ export default function Dashboard() {
                   placeholder="https://api.example.com"
                   className="intentInput"
                 />
-                <label htmlFor="api-key" className="inputLabel">API Key</label>
+                <label htmlFor="api-key" className="inputLabel">
+                  API Key
+                </label>
                 <input
                   id="api-key"
                   type="text"
@@ -1525,13 +1543,23 @@ export default function Dashboard() {
                   placeholder="optional secret (exposed in browser)"
                   className="intentInput"
                 />
-                <label htmlFor="encrypt-before-save" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                  <input id="encrypt-before-save" type="checkbox" checked={encryptBeforeSave} onChange={(e) => setEncryptBeforeSave(e.target.checked)} />
+                <label
+                  htmlFor="encrypt-before-save"
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}
+                >
+                  <input
+                    id="encrypt-before-save"
+                    type="checkbox"
+                    checked={encryptBeforeSave}
+                    onChange={(e) => setEncryptBeforeSave(e.target.checked)}
+                  />
                   Encrypt in browser before saving
                 </label>
                 {encryptBeforeSave ? (
                   <>
-                    <label htmlFor="save-passphrase" className="inputLabel">Passphrase</label>
+                    <label htmlFor="save-passphrase" className="inputLabel">
+                      Passphrase
+                    </label>
                     <input
                       id="save-passphrase"
                       type="password"
@@ -1658,7 +1686,8 @@ export default function Dashboard() {
         .heroGrid {
           position: absolute;
           inset: 0;
-          background-image: linear-gradient(rgba(14, 32, 35, 0.05) 1px, transparent 1px),
+          background-image:
+            linear-gradient(rgba(14, 32, 35, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(14, 32, 35, 0.05) 1px, transparent 1px);
           background-size: 120px 120px;
           opacity: 0.35;
@@ -1841,7 +1870,9 @@ export default function Dashboard() {
           padding: 0 14px;
           font-size: 1rem;
           color: var(--ink);
-          transition: box-shadow 180ms ease, border-color 180ms ease;
+          transition:
+            box-shadow 180ms ease,
+            border-color 180ms ease;
         }
 
         .intentInput:focus {
@@ -1915,7 +1946,9 @@ export default function Dashboard() {
           background: #fff;
           text-align: left;
           cursor: pointer;
-          transition: transform 140ms ease, box-shadow 170ms ease;
+          transition:
+            transform 140ms ease,
+            box-shadow 170ms ease;
         }
 
         .useCaseCard:hover {
@@ -2149,7 +2182,9 @@ export default function Dashboard() {
           background: #fff;
           text-align: left;
           cursor: pointer;
-          transition: transform 140ms ease, box-shadow 170ms ease;
+          transition:
+            transform 140ms ease,
+            box-shadow 170ms ease;
         }
 
         .playgroundCard:hover {
@@ -2255,7 +2290,9 @@ export default function Dashboard() {
           border: 1px solid rgba(18, 65, 69, 0.16);
           padding: 14px;
           background: #fff;
-          transition: transform 140ms ease, box-shadow 170ms ease;
+          transition:
+            transform 140ms ease,
+            box-shadow 170ms ease;
           box-shadow: 0 6px 12px rgba(20, 54, 57, 0.06);
         }
 
@@ -2413,7 +2450,9 @@ export default function Dashboard() {
           border-radius: 14px;
           border: 1px solid rgba(18, 65, 69, 0.16);
           background: #fff;
-          transition: transform 140ms ease, box-shadow 170ms ease;
+          transition:
+            transform 140ms ease,
+            box-shadow 170ms ease;
         }
 
         .docCard:hover {
@@ -2618,7 +2657,10 @@ export default function Dashboard() {
           font-size: 0.92rem;
           font-weight: 650;
           cursor: pointer;
-          transition: transform 140ms ease, box-shadow 170ms ease, opacity 170ms ease;
+          transition:
+            transform 140ms ease,
+            box-shadow 170ms ease,
+            opacity 170ms ease;
         }
 
         .primaryButton {
@@ -2798,7 +2840,8 @@ function buildPlanSummary({
 }): PlanSummary {
   const risk = inferRisk(intent);
   const checks = buildPlanChecks(risk);
-  const summaryWarnings = warnings.length > 0 ? warnings : risk === 'low' ? [] : ['Approval required.'];
+  const summaryWarnings =
+    warnings.length > 0 ? warnings : risk === 'low' ? [] : ['Approval required.'];
   return {
     name,
     risk,
@@ -2832,7 +2875,7 @@ function buildDemoPlan(intent: string): { workflow: Workflow; summary: PlanSumma
 
 function prependActivity(
   existing: ActivityItem[],
-  entry: { title: string; detail: string; tone: ActivityItem['tone'] }
+  entry: { title: string; detail: string; tone: ActivityItem['tone'] },
 ): ActivityItem[] {
   const nextItem: ActivityItem = {
     id: createId('act'),

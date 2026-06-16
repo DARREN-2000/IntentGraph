@@ -3,6 +3,7 @@
 This directory contains versioned prompt templates used by the agent plane.
 
 All prompts must be:
+
 - Version controlled
 - Parameterized (no hardcoded user data)
 - Reviewed before deployment

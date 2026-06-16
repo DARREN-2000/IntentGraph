@@ -22,12 +22,15 @@ describe('PlannerService', () => {
 
     const result = await planner.plan({
       userId: 'user-1',
-      intent: 'Create a pull request in github repo: my-repo title: Improve auth from: feat/auth to: main',
+      intent:
+        'Create a pull request in github repo: my-repo title: Improve auth from: feat/auth to: main',
     });
 
     expect(result.success).toBe(true);
     expect(result.workflow?.steps[0].requiresApproval).toBe(true);
-    expect(result.warnings).toContain('This workflow contains high-risk actions requiring approval');
+    expect(result.warnings).toContain(
+      'This workflow contains high-risk actions requiring approval',
+    );
   });
 
   it('returns a helpful error for unknown intents', async () => {

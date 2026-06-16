@@ -233,7 +233,6 @@ API handlers used by the dashboard:
 
 ### Demo Video
 
-
 ### Regenerate Media Artifacts
 
 ```bash
@@ -242,40 +241,44 @@ node docs/scripts/capture-dashboard-demo.mjs
 
 Artifacts are written to:
 
-
 ### Update Media for New UI
 
 To capture fresh screenshots and video after UI changes:
 
 1. Start the full stack:
-  ```bash
-  docker-compose up -d
-  sleep 10
-  ```
+
+```bash
+docker-compose up -d
+sleep 10
+```
 
 2. In another terminal, start the web dashboard in demo mode:
-  ```bash
-  cd apps/web
-  NEXT_PUBLIC_DEMO_MODE=true npm run dev &
-  sleep 5
-  ```
+
+```bash
+cd apps/web
+NEXT_PUBLIC_DEMO_MODE=true npm run dev &
+sleep 5
+```
 
 3. Run the media capture script:
-  ```bash
-  node docs/scripts/capture-media-ci.mjs
-  ```
+
+```bash
+node docs/scripts/capture-media-ci.mjs
+```
 
 4. Verify artifacts were updated:
-  ```bash
-  ls -la docs/screenshots/ docs/videos/
-  ```
+
+```bash
+ls -la docs/screenshots/ docs/videos/
+```
 
 5. Commit and push:
-  ```bash
-  git add docs/screenshots/ docs/videos/
-  git commit -m "chore: update demo media for new UI"
-  git push origin main
-  ```
+
+```bash
+git add docs/screenshots/ docs/videos/
+git commit -m "chore: update demo media for new UI"
+git push origin main
+```
 
 The GitHub Pages deployment will automatically publish updated media within minutes.
 

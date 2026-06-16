@@ -4,16 +4,10 @@ import {
   type ActionDefinition,
   type PlanningResult,
 } from '@intentgraph/planner-service';
-import {
-  createApprovalsService,
-  type ApprovalRecord,
-} from '@intentgraph/approvals-service';
+import { createApprovalsService, type ApprovalRecord } from '@intentgraph/approvals-service';
 import { createMemoryService } from '@intentgraph/memory-service';
 import { createAuditService } from '@intentgraph/audit-service';
-import {
-  createExecutorService,
-  type ExecutionResponse,
-} from '@intentgraph/executor-service';
+import { createExecutorService, type ExecutionResponse } from '@intentgraph/executor-service';
 
 export interface StoredWorkflowSummary {
   id: string;
@@ -127,10 +121,7 @@ export class IntentGraphControlPlane {
     return { approval, execution };
   }
 
-  private updateWorkflowStatus(
-    workflowId: string,
-    status: ExecutionResponse['status'],
-  ): void {
+  private updateWorkflowStatus(workflowId: string, status: ExecutionResponse['status']): void {
     if (status === 'waiting-approval') {
       this.workflowStatuses.set(workflowId, 'waiting-approval');
       return;
