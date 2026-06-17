@@ -1,0 +1,34 @@
+[project]
+name = "intentgraph"
+version = "0.1.0"
+description = "A Python library that builds cross-file dependency graphs and code clusters to provide machine queryable context for AI agents."
+authors = [
+    {name = "Jules"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "networkx (>=3.6.1,<4.0.0)",
+    "pydantic (>=2.13.4,<3.0.0)",
+    "typer (>=0.26.7,<0.27.0)"
+]
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.0,<10.0.0)",
+    "ruff (>=0.15.17,<0.16.0)",
+    "mypy (>=2.1.0,<3.0.0)",
+    "types-networkx (>=3.6.1.20260612,<4.0.0.0)"
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
