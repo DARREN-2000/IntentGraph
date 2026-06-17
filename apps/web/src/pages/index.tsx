@@ -1483,8 +1483,9 @@ export default function Dashboard() {
             {encryptedPresent ? (
               <div>
                 <p className="hintText">An encrypted configuration is stored in this browser. Unlock it to use the config for this session.</p>
-                <label className="inputLabel">Passphrase</label>
+                <label htmlFor="unlockPassphrase" className="inputLabel">Passphrase</label>
                 <input
+                  id="unlockPassphrase"
                   type="password"
                   value={unlockPassphrase}
                   onChange={(e) => setUnlockPassphrase(e.target.value)}
@@ -1506,30 +1507,33 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                <label className="inputLabel">API Base URL</label>
+                <label htmlFor="runtimeApiBase" className="inputLabel">API Base URL</label>
                 <input
+                  id="runtimeApiBase"
                   type="text"
                   value={runtimeApiBase || ''}
                   onChange={(e) => setRuntimeApiBase(e.target.value)}
                   placeholder="https://api.example.com"
                   className="intentInput"
                 />
-                <label className="inputLabel">API Key</label>
+                <label htmlFor="runtimeApiKey" className="inputLabel">API Key</label>
                 <input
+                  id="runtimeApiKey"
                   type="text"
                   value={runtimeApiKey || ''}
                   onChange={(e) => setRuntimeApiKey(e.target.value)}
                   placeholder="optional secret (exposed in browser)"
                   className="intentInput"
                 />
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                  <input type="checkbox" checked={encryptBeforeSave} onChange={(e) => setEncryptBeforeSave(e.target.checked)} />
+                <label htmlFor="encryptBeforeSave" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <input id="encryptBeforeSave" type="checkbox" checked={encryptBeforeSave} onChange={(e) => setEncryptBeforeSave(e.target.checked)} />
                   Encrypt in browser before saving
                 </label>
                 {encryptBeforeSave ? (
                   <>
-                    <label className="inputLabel">Passphrase</label>
+                    <label htmlFor="passphrase" className="inputLabel">Passphrase</label>
                     <input
+                      id="passphrase"
                       type="password"
                       value={passphrase}
                       onChange={(e) => setPassphrase(e.target.value)}
