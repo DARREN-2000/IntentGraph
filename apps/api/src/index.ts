@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 /**
  * IntentGraph API — Control Plane
  *
@@ -83,7 +84,17 @@ function isAuthorized(req: IncomingMessage): boolean {
     return true;
   }
 
-  return req.headers.authorization === `Bearer ${configuredToken}`;
+    const authHeader = req.headers.authorization || '';
+  const expectedHeader = `Bearer ${configuredToken}`;
+
+  const authBuf = Buffer.from(authHeader);
+  const expectedBuf = Buffer.from(expectedHeader);
+
+  if (authBuf.byteLength !== expectedBuf.byteLength) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(authBuf, expectedBuf);
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {

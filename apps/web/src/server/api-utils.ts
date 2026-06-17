@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 interface BucketState {
@@ -48,7 +49,13 @@ export function requireApiToken(
   }
 
   const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${configuredToken}`) {
+  const authHeaderStr = authHeader || '';
+  const expectedHeader = `Bearer ${configuredToken}`;
+
+  const authBuf = Buffer.from(authHeaderStr);
+  const expectedBuf = Buffer.from(expectedHeader);
+
+  if (authBuf.byteLength !== expectedBuf.byteLength || !crypto.timingSafeEqual(authBuf, expectedBuf)) {
     sendError(res, 401, requestId, 'Unauthorized');
     return false;
   }
