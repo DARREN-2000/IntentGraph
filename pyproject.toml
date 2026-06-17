@@ -30,6 +30,9 @@ target-version = "py312"
 python_version = "3.12"
 strict = true
 
+[project.scripts]
+intentgraph = "intentgraph.cli:app"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
