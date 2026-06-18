@@ -15,6 +15,16 @@ class CodeParser:
         nodes: List[Node] = []
         edges: List[Edge] = []
 
+        MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+        if not os.path.exists(filepath):
+            logger.error(f"File does not exist: {filepath}")
+            return nodes, edges
+
+        if os.path.getsize(filepath) > MAX_FILE_SIZE:
+            logger.error(f"File {filepath} exceeds maximum size of 5MB")
+            return nodes, edges
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
