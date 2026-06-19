@@ -15,6 +15,10 @@ class Orchestrator:
 
     def process_directory(self, directory: str, exclude_dirs: List[str] | None = None) -> GraphData:
         """Processes a directory to build a full cross-file dependency graph."""
+        if not os.path.isdir(directory):
+            logger.error(f"Invalid directory path provided: {directory}")
+            return self.graph.export_to_pydantic()
+
         if exclude_dirs is None:
             exclude_dirs = [".git", "__pycache__", "venv", ".venv", "node_modules", "dist", "build"]
 

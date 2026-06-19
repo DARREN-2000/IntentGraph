@@ -1,0 +1,4 @@
+## 2024-06-19 - DoS via Unbounded File Reads
+**Vulnerability:** The Python `open(filepath).read()` call allowed processing unbounded file streams, exposing the system to memory exhaustion via files like `/dev/zero` or maliciously oversized files.
+**Learning:** `intentgraph/parser.py` was directly ingesting files entirely into memory without a size bound. Security code processing dynamic inputs must implement bounds on resource utilization to prevent trivial denial of service.
+**Prevention:** Always place a sensible `MAX_FILE_SIZE` limit and use bounded read functions (`f.read(MAX_FILE_SIZE + 1)`) along with checking the size rather than calling `f.read()` globally. Validating file paths before accessing (e.g. `os.path.isdir()`) helps defend against path traversal or improper handling of unexpected special files or symlinks.

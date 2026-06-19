@@ -15,9 +15,15 @@ class CodeParser:
         nodes: List[Node] = []
         edges: List[Edge] = []
 
+        # 10MB limit to prevent DoS from loading excessively large files or infinite streams
+        MAX_FILE_SIZE = 10 * 1024 * 1024
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
-                content = f.read()
+                content = f.read(MAX_FILE_SIZE + 1)
+                if len(content) > MAX_FILE_SIZE:
+                    logger.warning(f"File {filepath} exceeds 10MB limit, skipping to prevent DoS.")
+                    return nodes, edges
         except OSError as e:
             logger.error(f"Failed to read file {filepath}: {e}")
             return nodes, edges
