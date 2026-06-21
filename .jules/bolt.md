@@ -1,0 +1,3 @@
+## 2024-06-21 - Avoid Pydantic model_dump() in NetworkX graph construction loops
+**Learning:** Calling Pydantic's `model_dump()` inside tight data ingestion loops (like iterating through thousands of parsed AST nodes to build a NetworkX graph) introduces significant serialization and parsing overhead. NetworkX's node/edge addition methods handle raw dictionaries much faster.
+**Action:** When inserting large volumes of Pydantic models into a NetworkX graph, construct the property dictionaries manually by accessing the model attributes directly, and use batched `add_nodes_from` / `add_edges_from` methods rather than individual `add_node` / `add_edge` calls.
