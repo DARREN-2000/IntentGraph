@@ -15,6 +15,19 @@ class CodeParser:
         nodes: List[Node] = []
         edges: List[Edge] = []
 
+        # Security: Prevent DoS by validating file type and size before reading
+        if not os.path.isfile(filepath):
+            logger.error(f"Invalid file path: {filepath} is not a regular file")
+            return nodes, edges
+
+        try:
+            if os.path.getsize(filepath) > 1 * 1024 * 1024:  # 1MB limit
+                logger.error(f"File {filepath} exceeds maximum size limit of 1MB")
+                return nodes, edges
+        except OSError as e:
+            logger.error(f"Failed to get file size for {filepath}: {e}")
+            return nodes, edges
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()

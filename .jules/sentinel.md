@@ -1,0 +1,4 @@
+## 2025-02-23 - Arbitrary File Read and DoS via Unlimited File Reading
+**Vulnerability:** The application's core parsing logic in `intentgraph/parser.py` read files directly from standard input (provided path) without ensuring they were regular files and without enforcing limits on the maximum file size.
+**Learning:** Parsing tools that open arbitrarily provided file paths are susceptible to attacks reading infinite device files (e.g., `/dev/zero` or `/dev/random`) or massive files causing uncontrolled memory consumption leading to a DoS (Denial of Service) condition.
+**Prevention:** All file reading operations across the codebase should use input validation, strictly confirming `os.path.isfile(filepath)` and enforcing a file size limit check `os.path.getsize(filepath) <= LIMIT` prior to loading content into memory.
