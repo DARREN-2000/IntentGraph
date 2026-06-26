@@ -7,6 +7,8 @@ from intentgraph.logger import setup_logger
 
 logger = setup_logger(__name__)
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
 class CodeParser:
     def __init__(self) -> None:
         pass
@@ -14,6 +16,18 @@ class CodeParser:
     def parse_file(self, filepath: str) -> Tuple[List[Node], List[Edge]]:
         nodes: List[Node] = []
         edges: List[Edge] = []
+
+        if not os.path.isfile(filepath):
+            logger.error(f"Not a regular file: {filepath}")
+            return nodes, edges
+
+        try:
+            if os.path.getsize(filepath) > MAX_FILE_SIZE:
+                logger.error(f"File {filepath} exceeds MAX_FILE_SIZE limit of {MAX_FILE_SIZE} bytes.")
+                return nodes, edges
+        except OSError as e:
+            logger.error(f"Failed to get file size for {filepath}: {e}")
+            return nodes, edges
 
         try:
             with open(filepath, "r", encoding="utf-8") as f:
