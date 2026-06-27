@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://DARREN-2000.github.io/IntentGraph/sitemap.xml
