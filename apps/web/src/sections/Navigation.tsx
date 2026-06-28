@@ -24,7 +24,7 @@ export function Navigation() {
   return (
     <motion.header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-background/80 backdrop-blur-md border-b border-border' : 'bg-transparent'
+        isScrolled ? 'bg-background/60 backdrop-blur-xl border-b border-white/5' : 'bg-transparent'
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -59,7 +59,7 @@ export function Navigation() {
             <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Log in
             </a>
-            <Button size="sm" className="rounded-full px-4">
+            <Button size="sm" className="rounded-md px-4">
               Get Started
             </Button>
           </div>

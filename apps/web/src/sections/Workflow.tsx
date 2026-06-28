@@ -50,7 +50,7 @@ export function Workflow() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 ring-1 ring-inset ring-green-600/20">Completed</span>
+                    <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">Completed</span>
                     <p className="text-xs text-muted-foreground mt-1">2m ago</p>
                   </div>
                 </div>
@@ -66,7 +66,7 @@ export function Workflow() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500 ring-1 ring-inset ring-yellow-600/20">Pending Approval</span>
+                    <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Pending Approval</span>
                     <p className="text-xs text-muted-foreground mt-1">Requires Security Lead</p>
                   </div>
                 </div>
@@ -82,7 +82,7 @@ export function Workflow() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10">Executing</span>
+                    <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">Executing</span>
                     <p className="text-xs text-muted-foreground mt-1">Step 2 of 4</p>
                   </div>
                 </div>

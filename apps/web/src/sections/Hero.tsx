@@ -8,7 +8,7 @@ export function Hero() {
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10 bg-grid-white/[0.02] bg-[length:40px_40px]" />
       <div className="absolute top-0 left-1/2 -z-10 -translate-x-1/2 blur-3xl xl:-top-6">
-        <div className="aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-20" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}></div>
+        <div className="aspect-[1155/678] w-[72.1875rem] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/10 via-background to-background" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}></div>
       </div>
 
       <div className="container px-4 mx-auto md:px-6">
@@ -34,9 +34,9 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="max-w-4xl"
           >
-            <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl lg:text-7xl">
               The trust layer for <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/50">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground/70">
                 autonomous agents.
               </span>
             </h1>
@@ -68,8 +68,8 @@ export function Hero() {
           >
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent z-10 bottom-0 top-1/2 pointer-events-none" />
 
-            <div className="rounded-xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden glass animate-float">
-              <div className="flex items-center px-4 py-3 border-b border-border/50 bg-muted/30">
+            <div className="rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden glass animate-float">
+              <div className="flex items-center px-4 py-3 border-b border-white/10 bg-muted/30">
                 <div className="flex space-x-2">
                   <div className="w-3 h-3 rounded-full bg-destructive/80" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
