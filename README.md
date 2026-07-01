@@ -60,10 +60,7 @@ User Intent (Web / CLI)
 ## 📷 Experience
 
 <div align="center">
-  <img src="docs/screenshots/dashboard-home.png" width="45%" alt="Dashboard Home" />
   <img src="docs/screenshots/dashboard-workflow-planned.png" width="45%" alt="Workflow Planned" />
-  <br/>
-  <img src="docs/screenshots/dashboard-waiting-approval.png" width="45%" alt="Waiting Approval" />
   <img src="docs/screenshots/dashboard-execution-complete.png" width="45%" alt="Execution Complete" />
 </div>
 
@@ -75,7 +72,7 @@ User Intent (Web / CLI)
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui.
 - **Backend (Core Analysis):** Python 3.10+, NetworkX, Pydantic, AST.
-- **Backend (Services):** Node.js 20+, Temporal (Durability), PostgreSQL (State), NATS (Messaging).
+- **Backend (Services):** Node.js 20+, Better-SQLite3, Temporal (Durability), Express.
 - **Infrastructure:** Docker, Kubernetes (Helm), Terraform.
 
 ### Project Structure
@@ -85,7 +82,8 @@ GovernOS is a monorepo containing both the frontend applications and backend cor
 ```text
 IntentGraph/
 ├── apps/
-│   └── web/            # Next.js Dashboard
+│   ├── api/            # Node.js + Express + SQLite Backend
+│   └── web/            # React + Vite Dashboard
 ├── intentgraph/        # Python Core Engine
 ├── docs/               # System Documentation
 └── infra/              # Terraform & Helm
@@ -105,48 +103,45 @@ git clone https://github.com/organization/intentgraph.git
 cd intentgraph
 
 # Install Node and Python dependencies
-npm install
+cd apps/api && pnpm install
+cd ../web && pnpm install
+cd ../../
 poetry install
 ```
 
 ### 2. Running Locally
 
-Start the backing services (Postgres, Redis, NATS) via Docker:
-
-```bash
-docker compose up -d
-```
-
 Start the development servers:
 
 ```bash
-# In terminal 1 (Frontend)
-cd apps/web
-npm run dev &
+# In terminal 1 (Python Core Engine)
+poetry run python -m uvicorn intentgraph.api:app --host 0.0.0.0 --port 8000
 
-# In terminal 2 (Python API)
-poetry run python -m intentgraph.api &
+# In terminal 2 (Node.js Backend API)
+cd apps/api
+pnpm run build && node dist/index.js
+
+# In terminal 3 (Frontend)
+cd apps/web
+pnpm run dev
 ```
 
-The web dashboard is now available at `http://localhost:3000`.
+The web dashboard is now available at `http://localhost:5173`. You can log in using `admin@governos.io` and `password`.
 
 ### 3. Usage Examples
-
-**CLI Example:**
-
-```bash
-# Plan an intent
-governos plan intent.yaml
-
-# Approve and execute
-governos apply
-```
 
 **API Example:**
 
 ```bash
+# Login to get token
+curl -X POST http://localhost:3001/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@governos.io","password":"password"}'
+
+# Submit Intent
 curl -X POST http://localhost:3001/api/v1/intents \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
   -d '{"description": "Provision a new S3 bucket for project Alpha"}'
 ```
 
@@ -158,28 +153,8 @@ GovernOS is configured via environment variables.
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis instance URL |
-| `NATS_URL` | NATS Broker URL |
-| `MAX_FILE_SIZE` | File parser limit (bytes) |
-
-### Docker Support
-
-A complete Docker Compose stack is provided for local testing (`docker-compose.yml`).
-
-### Production Deployment
-
-For enterprise production, we provide Helm charts (`infra/helm/intentgraph`) and Terraform modules (`infra/terraform`) for AWS EKS deployment. Refer to the [Deployment Documentation](docs/architecture/deployment.md) for details.
-
----
-
-## ⚡ Performance & Benchmarks
-
-GovernOS is optimized for high-throughput, latency-sensitive workflows.
-
-- **Parser Speed:** The Python AST parser handles 10,000 LOC/sec.
-- **Memory Footprint:** Batched network graph construction via NetworkX reduces overhead by ~40% during large directory ingestion.
-- **Queue Throughput:** The Executor service can process 5,000 parallel actions/minute when scaled horizontally on Kubernetes.
+| `JWT_SECRET` | Secret for JWT token generation |
+| `PORT` | API listening port |
 
 ---
 
@@ -200,9 +175,10 @@ Please read our [Security Policy](SECURITY.md) and [Threat Model](docs/security/
 - [x] Python core graph orchestration.
 - [x] React 19 / Vite Frontend dashboard.
 - [x] Basic execution planning and policy evaluation.
+- [x] Fallback SQLite Workflow Engine.
+- [x] Connectors for AWS, GCP, and GitHub.
+- [x] Role-Based Access Control (RBAC) integration.
 - [ ] Implement Temporal durability for long-running workflows.
-- [ ] Connectors for AWS, GCP, and GitHub.
-- [ ] Role-Based Access Control (RBAC) integration.
 
 ---
 
