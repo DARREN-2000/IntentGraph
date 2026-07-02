@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, useScroll } from 'framer-motion'
 import { Button } from '@/components/Button'
 import { Menu, X, Hexagon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -35,10 +36,10 @@ export function Navigation() {
 
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <a href="#" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <Hexagon className="h-8 w-8 text-primary" fill="currentColor" />
               <span className="font-bold text-xl tracking-tight">GovernOS</span>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Nav */}
@@ -56,12 +57,14 @@ export function Navigation() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Log in
-            </a>
-            <Button size="sm" className="rounded-md px-4">
-              Get Started
-            </Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button size="sm" className="rounded-md px-4">
+                Get Started
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -92,12 +95,16 @@ export function Navigation() {
             ))}
           </nav>
           <div className="flex flex-col gap-2 pt-4 border-t border-border">
-            <Button variant="outline" className="w-full justify-center">
-              Log in
-            </Button>
-            <Button className="w-full justify-center">
-              Get Started
-            </Button>
+            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full justify-center">
+                Log in
+              </Button>
+            </Link>
+            <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button className="w-full justify-center">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       )}
